@@ -15,83 +15,119 @@ const getEmailTransporter = () => {
   console.log('🔐 Email Configuration Check:')
   console.log('  - Email User:', emailUser ? emailUser.substring(0, 5) + '***' : '❌ NOT SET')
   console.log('  - Email Password:', emailPassword ? '✅ SET (' + emailPassword.length + ' chars)' : '❌ NOT SET')
+  console.log('  - All env vars:', Object.keys(process.env).filter(k => k.includes('EMAIL') || k.includes('MONGODB')))
   
   if (!emailUser || !emailPassword) {
-    throw new Error('Email credentials not configured!')
+    console.error('❌ CRITICAL: Missing email credentials!')
+    console.error('EMAIL_USER:', process.env.EMAIL_USER ? 'EXISTS' : 'MISSING')
+    console.error('EMAIL_PASSWORD:', process.env.EMAIL_PASSWORD ? 'EXISTS' : 'MISSING')
+    throw new Error('Email credentials not configured! Check Vercel environment variables.')
   }
   
-  return nodemailer.createTransport({
+  const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: emailUser,
       pass: emailPassword,
     },
+    logger: true,
+    debug: true  // Enable detailed debugging
   })
+  
+  return transporter
 }
 
 /**
  * Send contact form email
  */
 const sendContactEmail = async (data) => {
-  const { name, email, message } = data
+  const { name, email, message, subject } = data
+  const adminEmail = process.env.EMAIL_USER
 
   try {
     console.log('\n📧 Starting email sending process...')
-    console.log('   Recipient (you):', process.env.EMAIL_USER)
-    console.log('   Sender (user):', email)
+    console.log('   Admin email:', adminEmail ? adminEmail.substring(0, 5) + '***' : 'UNDEFINED')
+    console.log('   User email:', email)
+    console.log('   Subject:', subject)
     
     const transporter = getEmailTransporter()
     console.log('✅ Email transporter created successfully')
 
+    // Prepare admin notification email
     const adminMailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
+      from: adminEmail,
+      to: adminEmail,  // Send to admin (yourself)
       subject: `New Portfolio Contact from ${name}`,
       html: `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message}</p>
-        <hr>
-        <p><small>Received at: ${new Date().toISOString()}</small></p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px;">
+          <h2 style="color: #333;">📨 New Contact Form Submission</h2>
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 5px;">
+            <p><strong>From:</strong> ${name}</p>
+            <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+            <p><strong>Subject:</strong> ${subject}</p>
+            <hr>
+            <p><strong>Message:</strong></p>
+            <p style="white-space: pre-wrap;">${message}</p>
+          </div>
+          <p style="color: #999; font-size: 12px;">Received: ${new Date().toLocaleString()}</p>
+        </div>
       `,
     }
 
+    // Prepare user confirmation email
     const userMailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Message Received - Rasesh Varshney',
+      from: adminEmail,
+      to: email,  // Send to the person who submitted
+      subject: 'Thank You - Message Received',
       html: `
-        <h2>Thank you for reaching out!</h2>
-        <p>Hi ${name},</p>
-        <p>I've received your message and will get back to you as soon as possible.</p>
-        <hr>
-        <p><strong>Your Message:</strong></p>
-        <p>${message}</p>
-        <hr>
-        <p>Best regards,<br><strong>Rasesh Varshney</strong></p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px;">
+          <h2 style="color: #333;">Thank you for reaching out! 👋</h2>
+          <p>Hi ${name},</p>
+          <p>I've received your message and will get back to you as soon as possible.</p>
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>Your Message:</strong></p>
+            <p style="white-space: pre-wrap;">${message}</p>
+          </div>
+          <p>Best regards,<br><strong>Rasesh Varshney</strong></p>
+        </div>
       `,
     }
 
-    // Send admin email
-    console.log('📮 Sending email to admin:', process.env.EMAIL_USER)
-    const adminResult = await transporter.sendMail(adminMailOptions)
-    console.log('✅ Admin email sent! Message ID:', adminResult.messageId)
+    // Send admin notification
+    console.log('📮 Sending notification email to admin...')
+    try {
+      const adminResult = await transporter.sendMail(adminMailOptions)
+      console.log('✅ Admin notification sent! ID:', adminResult.messageId)
+    } catch (adminEmailError) {
+      console.error('❌ Failed to send admin notification:', adminEmailError.message)
+      console.error('Error code:', adminEmailError.code)
+      console.error('Response:', adminEmailError.response)
+      throw adminEmailError
+    }
     
-    // Send confirmation email to user
-    console.log('📮 Sending confirmation email to user:', email)
-    const userResult = await transporter.sendMail(userMailOptions)
-    console.log('✅ User confirmation email sent! Message ID:', userResult.messageId)
+    // Send user confirmation
+    console.log('📮 Sending confirmation email to user...')
+    try {
+      const userResult = await transporter.sendMail(userMailOptions)
+      console.log('✅ User confirmation sent! ID:', userResult.messageId)
+    } catch (userEmailError) {
+      console.error('❌ Failed to send user confirmation:', userEmailError.message)
+      console.error('Error code:', userEmailError.code)
+      // Don't fail completely if user email fails
+      console.warn('⚠️ Proceeding even though user confirmation failed')
+    }
     
-    console.log('✅ All emails sent successfully!\n')
+    console.log('✅ Email sending completed!\n')
     return true
   } catch (error) {
-    console.error('\n❌ Email sending failed!')
-    console.error('   Error:', error.message)
+    console.error('\n❌ EMAIL SENDING ERROR!')
+    console.error('   Message:', error.message)
     console.error('   Code:', error.code)
+    console.error('   Response:', error.response)
     console.error('   Command:', error.command)
     console.error('\n')
+    
+    // Even if email fails, we'll return a partial success since the message is stored
     throw error
   }
 }
@@ -102,24 +138,30 @@ const sendContactEmail = async (data) => {
  */
 export const submitContact = async (req, res) => {
   try {
-    console.log('📨 Contact form received:', req.body)
+    console.log('\n' + '='.repeat(60))
+    console.log('📨 NEW CONTACT SUBMISSION')
+    console.log('='.repeat(60))
+    console.log('Form Data:', req.body)
 
     const { name, email, subject, message, phone } = req.body
 
     // Validate fields
     if (!name || !email || !subject || !message) {
+      console.warn('❌ Validation failed - missing required fields')
       return res.status(400).json({
         success: false,
-        message: 'All fields are required',
+        message: 'All fields (name, email, subject, message) are required',
       })
     }
 
-    // Log for debugging
     console.log('✅ Form validation passed')
+    let savedContactId = null
+    let emailsSent = false
+    let errors = []
 
-    // Try to save to MongoDB if connected
+    // 1️⃣ STEP 1: Save to MongoDB
     try {
-      console.log('💾 Attempting to save contact to MongoDB...')
+      console.log('\n1️⃣ SAVING TO MONGODB...')
       const ipAddress = req.ip
       const contact = new Contact({
         name,
@@ -130,46 +172,65 @@ export const submitContact = async (req, res) => {
         ipAddress,
       })
       const savedContact = await contact.save()
-      console.log('✅ Contact saved to MongoDB with ID:', savedContact._id)
-
-      // Try to send email
-      try {
-        console.log('📧 Attempting to send emails...')
-        await sendContactEmail({ name, email, message, subject })
-        console.log('✅ Emails sent successfully')
-      } catch (emailError) {
-        console.warn('⚠️ Email sending failed (but contact was saved):', emailError.message)
-      }
-
-      return res.status(201).json({
-        success: true,
-        message: 'Contact form submitted successfully!',
-        contactId: savedContact._id,
-      })
+      savedContactId = savedContact._id
+      console.log('✅ Saved to MongoDB. ID:', savedContactId)
     } catch (dbError) {
-      console.warn('⚠️ Database error:', dbError.message)
-      // Store in memory as fallback
+      console.warn('⚠️ MONGODB FAILED:', dbError.message)
+      errors.push('Database Save Failed: ' + dbError.message)
+      // Continue anyway - we'll use memory fallback
+    }
+
+    // 2️⃣ STEP 2: Try to send emails
+    try {
+      console.log('\n2️⃣ SENDING EMAILS...')
+      await sendContactEmail({ name, email, message, subject })
+      emailsSent = true
+      console.log('✅ Emails sent successfully')
+    } catch (emailError) {
+      console.error('❌ EMAIL SENDING FAILED!')
+      console.error('   Error:', emailError.message)
+      errors.push('Email Error: ' + emailError.message)
+      // Continue - message was saved or will be in memory
+    }
+
+    // 3️⃣ STEP 3: Fallback to memory if needed
+    if (!savedContactId) {
+      console.log('\n3️⃣ USING MEMORY FALLBACK...')
       const storedMessage = storeMessage({
         name,
         email,
         subject,
         message,
         phone,
-        source: 'fallback_memory'
+        source: 'memory_fallback',
+        timestamp: new Date().toISOString()
       })
-      console.log('📝 Returning success with memory storage fallback')
-      return res.status(201).json({
-        success: true,
-        message: 'Your message has been received. Thank you for reaching out!',
-        messageId: storedMessage.id,
-      })
+      console.log('✅ Message stored in memory. ID:', storedMessage.id)
     }
+
+    // ✅ RETURN SUCCESS
+    console.log('\n' + '='.repeat(60))
+    console.log('✅ SUBMISSION PROCESSED SUCCESSFULLY')
+    console.log('='.repeat(60) + '\n')
+
+    return res.status(201).json({
+      success: true,
+      message: 'Thank you! Your message has been received.',
+      contactId: savedContactId,
+      emailsSent: emailsSent,
+      errors: errors.length > 0 ? errors : undefined
+    })
+
   } catch (error) {
-    console.error('❌ Contact submission error:', error.message)
-    console.error('Stack trace:', error.stack)
+    console.error('\n' + '❌'.repeat(30))
+    console.error('CRITICAL ERROR IN CONTACT SUBMISSION')
+    console.error('Message:', error.message)
+    console.error('Stack:', error.stack)
+    console.error('❌'.repeat(30) + '\n')
+    
     return res.status(500).json({
       success: false,
-      message: 'Failed to submit contact form. Please try again.',
+      message: 'An error occurred while processing your submission. Please try again.',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     })
   }
