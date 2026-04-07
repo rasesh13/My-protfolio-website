@@ -95,7 +95,7 @@ export default function CustomCursor() {
               y: mousePosition.y - 24,
               scale: isHovering ? 1.5 : 1,
             }}
-            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+            transition={{ type: 'spring', stiffness: 1200, damping: 15 }}
             className="fixed w-12 h-12 pointer-events-none z-[9999]"
             style={{
               border: '2px solid rgba(6, 182, 212, 0.5)',
@@ -113,7 +113,7 @@ export default function CustomCursor() {
               scale: isHovering ? 0.5 : 1,
               opacity: isHovering ? 0.7 : 1,
             }}
-            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+            transition={{ type: 'spring', stiffness: 1200, damping: 15 }}
             className="fixed w-2 h-2 pointer-events-none z-[9999]"
             style={{
               background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
