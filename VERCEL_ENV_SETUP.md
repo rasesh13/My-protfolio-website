@@ -5,7 +5,28 @@
 2. Click on your **backend** project
 3. Go to **Settings** → **Environment Variables**
 
-## Step 2: Add Backend Environment Variables
+## Step 2: Quick Method - Import Environment Variables
+
+### Option A: Import from `.env.production` file (Easiest!)
+1. Go to: https://vercel.com/rasesh13s-projects/backend/settings/environment-variables
+2. Look for **"Import Environment Variables"** button
+3. You can:
+   - Paste raw `.env` content directly
+   - Or upload the `.env.production` file from project root
+
+Raw content to paste:
+```
+MONGODB_URI=your_connection_string_here
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASSWORD=your_app_password_here
+NODE_ENV=production
+PORT=5000
+```
+
+### Option B: Add Manually (One by one)
+If you don't see import option, add these manually:
+
+## Step 3: Add Backend Environment Variables
 
 Add these variables:
 
@@ -18,7 +39,7 @@ Add these variables:
 | `NODE_ENV` | Environment type | `production` |
 | `PORT` | Server port | `5000` |
 
-## Step 3: Get MongoDB Connection String
+## Step 4: Get MongoDB Connection String
 
 ### Option A: MongoDB Atlas (Recommended)
 1. Go to https://www.mongodb.com/cloud/atlas
@@ -32,7 +53,7 @@ Example:
 mongodb+srv://rasesh:mypassword@cluster0.mongodb.net/portfolio?retryWrites=true&w=majority
 ```
 
-## Step 4: Get Gmail App Password
+## Step 5: Get Gmail App Password
 
 1. Enable 2-Factor Authentication on your Gmail account
 2. Go to https://myaccount.google.com/apppasswords
@@ -40,7 +61,7 @@ mongodb+srv://rasesh:mypassword@cluster0.mongodb.net/portfolio?retryWrites=true&
 4. Google will generate a 16-character password
 5. Copy and paste it in Vercel (without spaces)
 
-## Step 5: Test the API
+## Step 6: Test the API
 
 After setting environment variables, test if it works:
 
@@ -64,3 +85,4 @@ If contact form still fails:
 2. Verify all environment variables are set correctly
 3. Make sure MongoDB connection string is valid
 4. Check email credentials are correct
+
