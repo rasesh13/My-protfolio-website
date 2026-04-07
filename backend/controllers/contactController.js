@@ -5,20 +5,34 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-// Configure email transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-})
+/**
+ * Get email transporter (create fresh each time to ensure env vars are loaded)
+ */
+const getEmailTransporter = () => {
+  console.log('🔐 Creating email transporter with:', {
+    user: process.env.EMAIL_USER ? process.env.EMAIL_USER.substring(0, 5) + '***' : 'NOT SET',
+    hasPassword: !!process.env.EMAIL_PASSWORD
+  })
+  
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  })
+}
 
 /**
  * Send contact form email
  */
 const sendContactEmail = async (data) => {
   const { name, email, message } = data
+
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    console.warn('⚠️ Email credentials not configured - skipping email')
+    return
+  }
 
   const adminMailOptions = {
     from: process.env.EMAIL_USER,
@@ -46,9 +60,16 @@ const sendContactEmail = async (data) => {
   }
 
   try {
+    const transporter = getEmailTransporter()
+    console.log('📮 Sending email to admin...')
     await transporter.sendMail(adminMailOptions)
+    console.log('✅ Admin email sent to:', process.env.EMAIL_USER)
+    
+    console.log('📮 Sending confirmation email to user...')
     await transporter.sendMail(userMailOptions)
-    console.log('✅ Emails sent successfully')
+    console.log('✅ User email sent to:', email)
+    
+    console.log('✅ All emails sent successfully')
   } catch (error) {
     console.error('❌ Email sending failed:', error.message)
     throw error
