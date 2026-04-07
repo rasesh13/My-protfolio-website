@@ -1,12 +1,14 @@
 import { motion } from 'framer-motion'
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import MagneticButton from './MagneticButton'
 import GlassCard from './GlassCard'
 import AnimatedSection from './AnimatedSection'
 
 export default function Contact() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -16,6 +18,16 @@ export default function Contact() {
     subject: '',
     message: '',
   })
+
+  // Auto navigate home after message is sent
+  useEffect(() => {
+    if (submitted) {
+      const timer = setTimeout(() => {
+        navigate('/')
+      }, 3000) // Navigate after 3 seconds
+      return () => clearTimeout(timer)
+    }
+  }, [submitted, navigate])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -31,7 +43,7 @@ export default function Contact() {
       if (response.data.success) {
         setSubmitted(true)
         setFormData({ name: '', email: '', subject: '', message: '' })
-        setTimeout(() => setSubmitted(false), 5000)
+        // No timeout here - useEffect will handle navigation
       }
     } catch (error) {
       console.error('Error sending message:', error)
