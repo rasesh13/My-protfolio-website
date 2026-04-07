@@ -1,0 +1,87 @@
+/* Global App Styles */
+body {
+  background: linear-gradient(135deg, #0a0e27 0%, #1e293b 100%);
+  cursor: default !important;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== CRITICAL FIX: Prevent Canvas from capturing mouse events ===== */
+canvas {
+  pointer-events: none !important;
+  z-index: 0 !important;
+  cursor: default !important;
+}
+
+/* ===== CHATBOT CURSOR AND INTERACTION FIXES ===== */
+
+/* Ensure chatbot is always above everything */
+[data-chatbot-wrapper] {
+  pointer-events: none !important;
+  z-index: 99999 !important;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  cursor: default !important;
+}
+
+/* Force all chatbot interactive elements to be clickable */
+[data-chatbot-wrapper] button,
+[data-chatbot-wrapper] input,
+[data-chatbot-wrapper] form {
+  pointer-events: auto !important;
+  cursor: auto !important;
+}
+
+/* Input field shows text cursor */
+[data-chatbot-wrapper] input {
+  cursor: text !important;
+}
+
+/* Button shows pointer cursor */
+[data-chatbot-wrapper] button {
+  cursor: pointer !important;
+}
+
+/* Form shows auto cursor */
+[data-chatbot-wrapper] form {
+  cursor: auto !important;
+}
+
+/* Allow all interactive elements inside chatbot window to receive events */
+[data-chatbot-window] {
+  pointer-events: auto !important;
+  cursor: default !important;
+}
+
+/* All children of chatbot window are interactive */
+[data-chatbot-window] * {
+  pointer-events: auto !important;
+  cursor: inherit !important;
+}
+
+/* Override any nested cursor: none */
+[data-chatbot-wrapper],
+[data-chatbot-wrapper] *,
+[data-chatbot-window],
+[data-chatbot-window] * {
+  cursor: auto !important;
+}
+
+/* Specific cursor overrides for interactive elements */
+[data-chatbot-window] button {
+  cursor: pointer !important;
+}
+
+[data-chatbot-window] input {
+  cursor: text !important;
+}
+
+[data-chatbot-window] textarea {
+  cursor: text !important;
+}
