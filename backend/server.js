@@ -188,36 +188,83 @@ app.get('/api/messages', (req, res) => {
   }
 })
 
-// Get all contacts from MongoDB database
+// Get all contacts from MongoDB database with fallback to memory
 app.get('/api/contacts-db', async (req, res) => {
   try {
     console.log('🗄️ Querying MongoDB for contacts...')
-    const contacts = await Contact.find()
-    console.log(`✅ Found ${contacts.length} contacts in MongoDB`)
     
-    res.json({
-      success: true,
-      source: 'MongoDB Database',
-      count: contacts.length,
-      contacts: contacts.map(c => ({
-        id: c._id,
-        name: c.name,
-        email: c.email,
-        subject: c.subject,
-        message: c.message,
-        phone: c.phone,
-        ipAddress: c.ipAddress,
-        createdAt: c.createdAt,
-        updatedAt: c.updatedAt
-      }))
-    })
+    // Set a timeout for MongoDB query (5 seconds)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('MongoDB query timeout')), 5000)
+    )
+    
+    const queryPromise = Contact.find()
+    
+    try {
+      const contacts = await Promise.race([queryPromise, timeoutPromise])
+      console.log(`✅ Found ${contacts.length} contacts in MongoDB`)
+      
+      return res.json({
+        success: true,
+        source: 'MongoDB Database',
+        count: contacts.length,
+        contacts: contacts.map(c => ({
+          id: c._id,
+          name: c.name,
+          email: c.email,
+          subject: c.subject,
+          message: c.message,
+          phone: c.phone,
+          ipAddress: c.ipAddress,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt
+        }))
+      })
+    } catch (dbTimeoutError) {
+      console.warn('⚠️ MongoDB timeout or error, falling back to memory storage')
+      console.warn('Error:', dbTimeoutError.message)
+      
+      // Fallback to in-memory message store
+      const messages = getAllMessages()
+      console.log(`📨 Retrieved ${messages.length} messages from memory`)
+      
+      return res.json({
+        success: true,
+        source: 'Memory Storage (Fallback)',
+        warning: 'MongoDB temporarily unavailable - showing cached messages',
+        count: messages.length,
+        contacts: messages.map(m => ({
+          id: m.id,
+          name: m.name,
+          email: m.email,
+          subject: m.subject,
+          message: m.message,
+          phone: m.phone,
+          timestamp: m.timestamp,
+          source: m.source
+        }))
+      })
+    }
   } catch (error) {
-    console.error('❌ MongoDB query error:', error.message)
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch contacts from MongoDB',
-      details: error.message
-    })
+    console.error('❌ Critical error in contacts endpoint:', error.message)
+    
+    // Last resort: return memory storage
+    try {
+      const messages = getAllMessages()
+      return res.json({
+        success: true,
+        source: 'Memory Storage (Emergency)',
+        error: 'Database unavailable - showing cached messages only',
+        count: messages.length,
+        contacts: messages
+      })
+    } catch (memoryError) {
+      return res.status(500).json({
+        success: false,
+        error: 'Unable to fetch contacts',
+        message: error.message
+      })
+    }
   }
 })
 

@@ -171,7 +171,14 @@ export const submitContact = async (req, res) => {
         phone,
         ipAddress,
       })
-      const savedContact = await contact.save()
+      
+      // Set timeout for MongoDB save (3 seconds)
+      const savePromise = contact.save()
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('MongoDB save timeout')), 3000)
+      )
+      
+      const savedContact = await Promise.race([savePromise, timeoutPromise])
       savedContactId = savedContact._id
       console.log('✅ Saved to MongoDB. ID:', savedContactId)
     } catch (dbError) {
