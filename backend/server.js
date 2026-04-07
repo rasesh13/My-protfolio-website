@@ -93,6 +93,70 @@ app.post('/api/test', (req, res) => {
   }
 })
 
+// Test email endpoint - send test email to verify configuration
+app.post('/api/test-email', async (req, res) => {
+  try {
+    console.log('\n🧪 TEST EMAIL ENDPOINT CALLED')
+    
+    // Check environment variables
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email credentials not configured',
+        missing: {
+          emailUser: !process.env.EMAIL_USER,
+          emailPassword: !process.env.EMAIL_PASSWORD
+        }
+      })
+    }
+
+    // Import nodemailer here to test
+    const nodemailer = (await import('nodemailer')).default
+    
+    console.log('Creating email transporter...')
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    })
+
+    const testEmail = process.env.EMAIL_USER
+    
+    console.log('Sending test email to:', testEmail)
+    const result = await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: testEmail,
+      subject: '🧪 Portfolio Test Email - Configuration Verified',
+      html: `
+        <h2>✅ Test Email Successful!</h2>
+        <p>Your email configuration is working correctly on Vercel.</p>
+        <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+        <p><strong>From:</strong> ${process.env.EMAIL_USER}</p>
+      `,
+    })
+
+    console.log('✅ Test email sent! Message ID:', result.messageId)
+    
+    res.json({
+      success: true,
+      message: 'Test email sent successfully!',
+      email: testEmail,
+      messageId: result.messageId,
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    console.error('❌ Test email failed:', error.message)
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      code: error.code,
+      command: error.command
+    })
+  }
+})
+
 // Get all submitted messages (admin endpoint - for verification)
 app.get('/api/messages', (req, res) => {
   try {
