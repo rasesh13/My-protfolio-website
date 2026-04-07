@@ -94,7 +94,7 @@ app.post('/api/test', (req, res) => {
 })
 
 // Test email endpoint - send test email to verify configuration
-app.post('/api/test-email', async (req, res) => {
+const testEmailHandler = async (req, res) => {
   try {
     console.log('\n🧪 TEST EMAIL ENDPOINT CALLED')
     
@@ -155,7 +155,11 @@ app.post('/api/test-email', async (req, res) => {
       command: error.command
     })
   }
-})
+}
+
+// Support both GET and POST
+app.get('/api/test-email', testEmailHandler)
+app.post('/api/test-email', testEmailHandler)
 
 // Get all submitted messages (admin endpoint - for verification)
 app.get('/api/messages', (req, res) => {
