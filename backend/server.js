@@ -5,6 +5,7 @@ import connectDB from './config/database.js'
 import contactRoutes from './routes/contact.js'
 import chatbotRoutes from './routes/chatbot.js'
 import projectRoutes from './routes/projects.js'
+import { getAllMessages } from './utils/messageStore.js'
 
 dotenv.config()
 
@@ -85,6 +86,32 @@ app.post('/api/test', (req, res) => {
     })
   } catch (error) {
     console.error('Test error:', error)
+    res.status(500).json({
+      success: false,
+      error: error.message
+    })
+  }
+})
+
+// Get all submitted messages (admin endpoint - for verification)
+app.get('/api/messages', (req, res) => {
+  try {
+    const messages = getAllMessages()
+    console.log(`📨 Retrieved ${messages.length} messages`)
+    res.json({
+      success: true,
+      count: messages.length,
+      messages: messages.map(m => ({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        subject: m.subject,
+        timestamp: m.timestamp,
+        source: m.source
+      }))
+    })
+  } catch (error) {
+    console.error('Get messages error:', error)
     res.status(500).json({
       success: false,
       error: error.message

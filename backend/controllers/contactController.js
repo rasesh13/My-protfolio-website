@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import Contact from '../models/Contact.js'
+import { storeMessage } from '../utils/messageStore.js'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -106,12 +107,20 @@ export const submitContact = async (req, res) => {
       })
     } catch (dbError) {
       console.warn('⚠️ Database error:', dbError.message)
-      // Even if DB fails, return success for user experience
-      console.log('📝 Returning success despite DB error - fallback mode')
+      // Store in memory as fallback
+      const storedMessage = storeMessage({
+        name,
+        email,
+        subject,
+        message,
+        phone,
+        source: 'fallback_memory'
+      })
+      console.log('📝 Returning success with memory storage fallback')
       return res.status(201).json({
         success: true,
         message: 'Your message has been received. Thank you for reaching out!',
-        note: 'Message received (database temporarily unavailable)',
+        messageId: storedMessage.id,
       })
     }
   } catch (error) {
