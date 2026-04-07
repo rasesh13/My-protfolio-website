@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaTimes, FaPaperPlane } from 'react-icons/fa'
+import aiOrbImage from '/images/ai-orb.png'
 
 const knowledgeBase = {
   about: {
@@ -134,7 +135,7 @@ export default function Chatbot() {
         
         {/* AI Orb Icon */}
         <img
-          src="/images/ai-orb.png"
+          src={aiOrbImage}
           alt="AI Chat"
           style={{
             width: '100%',
