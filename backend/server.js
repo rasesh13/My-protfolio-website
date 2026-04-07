@@ -6,6 +6,7 @@ import contactRoutes from './routes/contact.js'
 import chatbotRoutes from './routes/chatbot.js'
 import projectRoutes from './routes/projects.js'
 import { getAllMessages } from './utils/messageStore.js'
+import Contact from './models/Contact.js'
 
 dotenv.config()
 
@@ -183,6 +184,39 @@ app.get('/api/messages', (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message
+    })
+  }
+})
+
+// Get all contacts from MongoDB database
+app.get('/api/contacts-db', async (req, res) => {
+  try {
+    console.log('🗄️ Querying MongoDB for contacts...')
+    const contacts = await Contact.find()
+    console.log(`✅ Found ${contacts.length} contacts in MongoDB`)
+    
+    res.json({
+      success: true,
+      source: 'MongoDB Database',
+      count: contacts.length,
+      contacts: contacts.map(c => ({
+        id: c._id,
+        name: c.name,
+        email: c.email,
+        subject: c.subject,
+        message: c.message,
+        phone: c.phone,
+        ipAddress: c.ipAddress,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt
+      }))
+    })
+  } catch (error) {
+    console.error('❌ MongoDB query error:', error.message)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch contacts from MongoDB',
+      details: error.message
     })
   }
 })
