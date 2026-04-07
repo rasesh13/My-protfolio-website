@@ -58,6 +58,40 @@ app.get('/health', (req, res) => {
   })
 })
 
+// Test endpoint (for debugging)
+app.post('/api/test', (req, res) => {
+  try {
+    console.log('Test endpoint called')
+    console.log('Request body:', req.body)
+    console.log('Environment check:', {
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasEmailUser: !!process.env.EMAIL_USER,
+      hasEmailPassword: !!process.env.EMAIL_PASSWORD,
+      nodeEnv: process.env.NODE_ENV
+    })
+    
+    res.json({
+      success: true,
+      message: 'Test successful - API is responding',
+      received: req.body,
+      serverInfo: {
+        timestamp: new Date(),
+        environment: process.env.NODE_ENV || 'development',
+        hasRequiredEnv: {
+          mongodb: !!process.env.MONGODB_URI,
+          email: !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD)
+        }
+      }
+    })
+  } catch (error) {
+    console.error('Test error:', error)
+    res.status(500).json({
+      success: false,
+      error: error.message
+    })
+  }
+})
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
