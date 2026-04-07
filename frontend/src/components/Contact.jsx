@@ -39,7 +39,11 @@ export default function Contact() {
     setError('')
     setLoading(true)
     try {
-      const response = await axios.post('http://localhost:5000/api/contact', formData)
+      const apiUrl = import.meta.env.MODE === 'production' 
+        ? 'https://backend-alpha-ebon-24.vercel.app/api/contact'
+        : 'http://localhost:5000/api/contact'
+      
+      const response = await axios.post(apiUrl, formData)
       if (response.data.success) {
         setSubmitted(true)
         setFormData({ name: '', email: '', subject: '', message: '' })
