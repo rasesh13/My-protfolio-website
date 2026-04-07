@@ -60,8 +60,23 @@ const sendContactEmail = async (data) => {
  */
 export const submitContact = async (req, res) => {
   try {
+    console.log('📨 Contact form received:', req.body)
+    console.log('🔧 Environment variables check:', {
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasEmailUser: !!process.env.EMAIL_USER,
+      hasEmailPassword: !!process.env.EMAIL_PASSWORD,
+    })
+
     const { name, email, subject, message, phone } = req.body
     const ipAddress = req.ip
+
+    // Validate fields
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required',
+      })
+    }
 
     // Create contact document
     const contact = new Contact({
@@ -74,13 +89,17 @@ export const submitContact = async (req, res) => {
     })
 
     // Save to MongoDB
+    console.log('💾 Saving contact to MongoDB...')
     const savedContact = await contact.save()
+    console.log('✅ Contact saved to MongoDB')
 
     // Send email
     try {
+      console.log('📧 Sending emails...')
       await sendContactEmail({ name, email, message, subject })
+      console.log('✅ Emails sent successfully')
     } catch (emailError) {
-      console.warn('Email sending failed, but contact was saved:', emailError.message)
+      console.warn('⚠️ Email sending failed, but contact was saved:', emailError.message)
     }
 
     res.status(201).json({
@@ -89,7 +108,8 @@ export const submitContact = async (req, res) => {
       contactId: savedContact._id,
     })
   } catch (error) {
-    console.error('Contact submission error:', error)
+    console.error('❌ Contact submission error:', error.message)
+    console.error('Stack trace:', error.stack)
     res.status(500).json({
       success: false,
       message: 'Failed to submit contact form. Please try again.',
