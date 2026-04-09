@@ -39,19 +39,49 @@ export default function Contact() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    
     try {
-      const response = await axios.post(API_ENDPOINTS.CONTACT, formData)
+      console.log('📤 Sending contact form to:', API_ENDPOINTS.CONTACT)
+      console.log('📝 Form data:', formData)
+      console.log('🌐 Frontend URL:', window.location.href)
+      
+      const response = await axios.post(API_ENDPOINTS.CONTACT, formData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        timeout: 10000 // 10 second timeout
+      })
+      
+      console.log('✅ Response:', response.data)
+      
       if (response.data.success) {
         setSubmitted(true)
         setFormData({ name: '', email: '', subject: '', message: '' })
-        // No timeout here - useEffect will handle navigation
+      } else {
+        setError(response.data.message || 'Failed to send message. Please try again.')
       }
     } catch (error) {
-      console.error('Error sending message:', error)
-      if (error.response?.status === 400) {
-        setError('Please fill all fields correctly:\n- Name: 2+ characters\n- Email: valid format\n- Subject: 3+ characters\n- Message: 10+ characters')
+      console.error('❌ Error sending message:', error)
+      console.error('Error type:', error.code)
+      console.error('Error response:', error.response?.data)
+      console.error('Error status:', error.response?.status)
+      console.error('Error message:', error.message)
+      console.error('Is network error?', error.message === 'Network Error')
+      
+      // Handle specific error types
+      if (error.code === 'ECONNABORTED') {
+        setError('Request timeout. Backend may be starting. Please try again in a moment.')
+      } else if (error.message === 'Network Error' || error.request && !error.response) {
+        setError('🌐 Network error: Cannot reach backend server. The backend might be cold-starting. Try again in 10 seconds.')
+      } else if (error.response?.status === 400) {
+        setError('Please fill all fields correctly:\n- Name: 2+ characters\n- Email: valid format\n- Subject: 2+ characters\n- Message: 5+ characters')
+      } else if (error.response?.status === 500) {
+        setError('Server error: ' + (error.response?.data?.message || 'Internal server error'))
+      } else if (error.response?.status === 0) {
+        setError('CORS error or backend not accessible. Please check if backend is running.')
       } else {
-        setError('Failed to send message. Please try again.')
+        setError(error.response?.data?.message || 'Failed to send message: ' + error.message)
       }
     } finally {
       setLoading(false)

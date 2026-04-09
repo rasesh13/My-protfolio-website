@@ -2,11 +2,14 @@
 // Detect environment at runtime
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
+// Always use HTTPS for production backend
 const API_BASE = isDevelopment
   ? 'http://localhost:5000'
-  : 'https://backend-fktwb873d-rasesh13s-projects.vercel.app'
+  : 'https://backend-alpha-ebon-24.vercel.app'
 
 console.log('🔗 API Base URL:', API_BASE)
+console.log('Frontend Hostname:', window.location.hostname)
+console.log('Frontend Protocol:', window.location.protocol)
 console.log('Environment:', isDevelopment ? 'Development' : 'Production')
 
 export const API_ENDPOINTS = {
