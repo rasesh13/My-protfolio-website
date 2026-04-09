@@ -18,11 +18,23 @@ connectDB()
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', '*'],
+  origin: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://frontend-three-orcin-18.vercel.app',
+    'https://frontend-d3y6vaiao-rasesh13s-projects.vercel.app',
+    'https://frontend-mm9t239dh-rasesh13s-projects.vercel.app',
+    'https://frontend-5oyk8g3xk-rasesh13s-projects.vercel.app',
+    'https://frontend-kupuyv0r8-rasesh13s-projects.vercel.app',
+    'https://frontend-o7qtmxyoy-rasesh13s-projects.vercel.app',
+    'https://frontend-64he5npe9-rasesh13s-projects.vercel.app',
+    '*'
+  ],
   credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  exposedHeaders: ['Content-Length', 'X-JSON-Response']
 }))
 
 // Handle preflight requests explicitly
@@ -47,6 +59,16 @@ app.get('/health', (req, res) => {
     status: 'Server is running!',
     timestamp: new Date(),
     environment: process.env.NODE_ENV || 'development'
+  })
+})
+
+// Warmup endpoint - keeps serverless warm, initializes DB connection
+app.get('/warmup', (req, res) => {
+  console.log('🔥 Warmup request received - keeping server warm')
+  res.status(200).json({
+    status: 'Warmup successful',
+    timestamp: new Date(),
+    message: 'Backend is warmed up and ready'
   })
 })
 
@@ -113,6 +135,24 @@ const testEmailHandler = async (req, res) => {
       },
     })
 
+    // VERIFY SMTP CONNECTION
+    console.log('🔍 Verifying SMTP connection...')
+    try {
+      await transporter.verify()
+      console.log('✅ SMTP connection verified successfully!')
+    } catch (verifyError) {
+      console.error('❌ SMTP verification failed!')
+      console.error('   Error:', verifyError.message)
+      return res.status(500).json({
+        success: false,
+        error: 'SMTP verification failed: ' + verifyError.message,
+        details: {
+          code: verifyError.code,
+          message: verifyError.message
+        }
+      })
+    }
+
     const testEmail = process.env.EMAIL_USER
     
     console.log('Sending test email to:', testEmail)
@@ -120,6 +160,7 @@ const testEmailHandler = async (req, res) => {
       from: process.env.EMAIL_USER,
       to: testEmail,
       subject: '🧪 Portfolio Test Email - Configuration Verified',
+      text: 'Test email from portfolio backend',
       html: `
         <h2>✅ Test Email Successful!</h2>
         <p>Your email configuration is working correctly on Vercel.</p>
@@ -151,6 +192,70 @@ const testEmailHandler = async (req, res) => {
 // Support both GET and POST
 app.get('/api/test-email', testEmailHandler)
 app.post('/api/test-email', testEmailHandler)
+
+// TEST EMAIL TO CUSTOM ADDRESS
+app.post('/api/test-email-custom', async (req, res) => {
+  try {
+    const { recipientEmail } = req.body
+    
+    if (!recipientEmail) {
+      return res.status(400).json({
+        success: false,
+        error: 'recipientEmail is required'
+      })
+    }
+    
+    console.log('\n🧪 SENDING TEST EMAIL TO:', recipientEmail)
+    
+    const emailUser = process.env.EMAIL_USER
+    const emailPassword = process.env.EMAIL_PASSWORD
+    
+    if (!emailUser || !emailPassword) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email credentials not configured'
+      })
+    }
+    
+    const nodemailer = (await import('nodemailer')).default
+    
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: emailUser,
+        pass: emailPassword,
+      }
+    })
+    
+    const result = await transporter.sendMail({
+      from: emailUser,
+      to: recipientEmail,
+      subject: 'Test Email from Portfolio Backend',
+      html: `
+        <h2>✅ Test Email Delivered!</h2>
+        <p>This is a test email sent to: <strong>${recipientEmail}</strong></p>
+        <p>Your email configuration is working correctly.</p>
+        <p>Sent: ${new Date().toLocaleString()}</p>
+      `
+    })
+    
+    console.log('✅ Test email sent to', recipientEmail, '- Message ID:', result.messageId)
+    
+    res.json({
+      success: true,
+      message: 'Test email sent!',
+      recipientEmail,
+      messageId: result.messageId
+    })
+    
+  } catch (error) {
+    console.error('❌ Error sending custom test email:', error.message)
+    res.status(500).json({
+      success: false,
+      error: error.message
+    })
+  }
+})
 
 // Get all submitted messages (admin endpoint - for verification)
 app.get('/api/messages', (req, res) => {

@@ -37,55 +37,90 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    console.log('🚀 Form submitted! Starting validation...')
+    console.log('Form data:', formData)
+    
+    // Frontend validation before sending
+    if (!formData.name || formData.name.trim().length < 2) {
+      setError('Name must be at least 2 characters')
+      console.error('❌ Validation failed: Name too short')
+      return
+    }
+    if (!formData.email || !formData.email.includes('@')) {
+      setError('Please enter a valid email address')
+      console.error('❌ Validation failed: Invalid email')
+      return
+    }
+    if (!formData.subject || formData.subject.trim().length < 2) {
+      setError('Subject must be at least 2 characters')
+      console.error('❌ Validation failed: Subject too short')
+      return
+    }
+    if (!formData.message || formData.message.trim().length < 5) {
+      setError('Message must be at least 5 characters')
+      console.error('❌ Validation failed: Message too short')
+      return
+    }
+    
     setError('')
     setLoading(true)
+    console.log('✅ Frontend validation passed. Sending to backend...')
+    console.log('📤 API Endpoint:', API_ENDPOINTS.CONTACT)
     
     let retries = 0
-    const maxRetries = 3
+    const maxRetries = 5
     
     const attemptSubmit = async () => {
       try {
-        console.log(`📤 Attempt ${retries + 1}/${maxRetries}: Sending to:`, API_ENDPOINTS.CONTACT)
-        console.log('📝 Form data:', formData)
+        console.log(`\n📤 Attempt ${retries + 1}/${maxRetries} to: ${API_ENDPOINTS.CONTACT}`)
+        console.log('📦 Payload:', formData)
         
         const response = await axios.post(API_ENDPOINTS.CONTACT, formData, {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-          timeout: 30000 // 30 second timeout (increased from 10)
+          timeout: 15000
         })
         
-        console.log('✅ Response:', response.data)
+        console.log('✅ SUCCESS! Response:', response.data)
         
         if (response.data.success) {
+          console.log('🎉 Form submitted successfully!')
           setSubmitted(true)
           setFormData({ name: '', email: '', subject: '', message: '' })
         } else {
+          console.error('❌ Response success=false:', response.data)
           setError(response.data.message || 'Failed to send message. Please try again.')
         }
       } catch (error) {
         retries++
         
-        console.error(`❌ Attempt ${retries} failed:`, error.message)
+        console.error(`\n❌ ATTEMPT ${retries} FAILED:`)
+        console.error('   Error Message:', error.message)
+        console.error('   Error Code:', error.code)
+        console.error('   Status:', error.response?.status)
+        console.error('   Response:', error.response?.data)
         
-        if (retries < maxRetries && (error.code === 'ECONNABORTED' || error.message === 'Network Error')) {
-          console.log(`⏳ Retrying in 3 seconds... (${retries}/${maxRetries})`)
-          setTimeout(attemptSubmit, 3000)
+        // Retry on timeout or network errors
+        if (retries < maxRetries && (error.code === 'ECONNABORTED' || error.message === 'Network Error' || error.code === 'ENOTFOUND' || !error.response)) {
+          const retryDelay = Math.min(1000 * retries, 3000)
+          console.log(`⏳ Retrying in ${retryDelay}ms... (${retries}/${maxRetries})`)
+          setTimeout(attemptSubmit, retryDelay)
           return
         }
         
         // Handle specific error types
         if (error.code === 'ECONNABORTED') {
-          setError('Request timeout. Backend is starting. Try again in 10 seconds.')
-        } else if (error.message === 'Network Error' || error.request && !error.response) {
-          setError('🌐 Backend is cold-starting. Please wait 15 seconds and try again.')
+          setError('⏱️ Request took too long. Please try again.')
+        } else if (error.message === 'Network Error' || !error.response || error.code === 'ENOTFOUND') {
+          setError(`🌐 Cannot reach backend (attempt ${retries}/${maxRetries}). Checking connection...`)
         } else if (error.response?.status === 400) {
           setError('Please fill all fields correctly:\n- Name: 2+ characters\n- Email: valid format\n- Subject: 2+ characters\n- Message: 5+ characters')
         } else if (error.response?.status === 500) {
           setError('Server error: ' + (error.response?.data?.message || 'Internal server error'))
         } else if (error.response?.status === 0) {
-          setError('CORS error or backend not accessible.')
+          setError('CORS error. Backend may be blocked.')
         } else {
           setError(error.response?.data?.message || 'Failed to send message: ' + error.message)
         }

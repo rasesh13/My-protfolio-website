@@ -13,14 +13,11 @@ const getEmailTransporter = () => {
   const emailPassword = process.env.EMAIL_PASSWORD
   
   console.log('🔐 Email Configuration Check:')
-  console.log('  - Email User:', emailUser ? emailUser.substring(0, 5) + '***' : '❌ NOT SET')
-  console.log('  - Email Password:', emailPassword ? '✅ SET (' + emailPassword.length + ' chars)' : '❌ NOT SET')
-  console.log('  - All env vars:', Object.keys(process.env).filter(k => k.includes('EMAIL') || k.includes('MONGODB')))
+  console.log('  - Email User:', emailUser ? emailUser : '❌ NOT SET')
+  console.log('  - Email Password length:', emailPassword ? emailPassword.length + ' chars' : '❌ NOT SET')
   
   if (!emailUser || !emailPassword) {
     console.error('❌ CRITICAL: Missing email credentials!')
-    console.error('EMAIL_USER:', process.env.EMAIL_USER ? 'EXISTS' : 'MISSING')
-    console.error('EMAIL_PASSWORD:', process.env.EMAIL_PASSWORD ? 'EXISTS' : 'MISSING')
     throw new Error('Email credentials not configured! Check Vercel environment variables.')
   }
   
@@ -30,8 +27,12 @@ const getEmailTransporter = () => {
       user: emailUser,
       pass: emailPassword,
     },
-    logger: true,
-    debug: true  // Enable detailed debugging
+    pool: {
+      maxConnections: 5,
+      maxMessages: 100,
+      rateDelta: 4000,
+      rateLimit: 14
+    }
   })
   
   return transporter
@@ -46,18 +47,31 @@ const sendContactEmail = async (data) => {
 
   try {
     console.log('\n📧 Starting email sending process...')
-    console.log('   Admin email:', adminEmail ? adminEmail.substring(0, 5) + '***' : 'UNDEFINED')
+    console.log('   Admin email:', adminEmail)
     console.log('   User email:', email)
     console.log('   Subject:', subject)
     
     const transporter = getEmailTransporter()
-    console.log('✅ Email transporter created successfully')
+    console.log('✅ Email transporter created')
+    
+    // VERIFY SMTP CONNECTION FIRST
+    console.log('🔍 Verifying SMTP connection...')
+    try {
+      await transporter.verify()
+      console.log('✅ SMTP connection verified!')
+    } catch (verifyError) {
+      console.error('❌ SMTP VERIFICATION FAILED!')
+      console.error('   Error:', verifyError.message)
+      console.error('   Code:', verifyError.code)
+      throw new Error('SMTP Connection Failed: ' + verifyError.message)
+    }
 
     // Prepare admin notification email
     const adminMailOptions = {
       from: adminEmail,
       to: adminEmail,  // Send to admin (yourself)
       subject: `New Portfolio Contact from ${name}`,
+      text: `New message from ${name} (${email})\n\nSubject: ${subject}\n\nMessage: ${message}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px;">
           <h2 style="color: #333;">📨 New Contact Form Submission</h2>
@@ -79,6 +93,7 @@ const sendContactEmail = async (data) => {
       from: adminEmail,
       to: email,  // Send to the person who submitted
       subject: 'Thank You - Message Received',
+      text: `Thank you for contacting me! I received your message and will get back to you soon.\n\nMessage: ${message}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px;">
           <h2 style="color: #333;">Thank you for reaching out! 👋</h2>
@@ -99,9 +114,10 @@ const sendContactEmail = async (data) => {
       const adminResult = await transporter.sendMail(adminMailOptions)
       console.log('✅ Admin notification sent! ID:', adminResult.messageId)
     } catch (adminEmailError) {
-      console.error('❌ Failed to send admin notification:', adminEmailError.message)
-      console.error('Error code:', adminEmailError.code)
-      console.error('Response:', adminEmailError.response)
+      console.error('❌ Failed to send admin notification:')
+      console.error('   Message:', adminEmailError.message)
+      console.error('   Code:', adminEmailError.code)
+      console.error('   Response:', adminEmailError.response)
       throw adminEmailError
     }
     
@@ -111,8 +127,9 @@ const sendContactEmail = async (data) => {
       const userResult = await transporter.sendMail(userMailOptions)
       console.log('✅ User confirmation sent! ID:', userResult.messageId)
     } catch (userEmailError) {
-      console.error('❌ Failed to send user confirmation:', userEmailError.message)
-      console.error('Error code:', userEmailError.code)
+      console.error('❌ Failed to send user confirmation:')
+      console.error('   Message:', userEmailError.message)
+      console.error('   Code:', userEmailError.code)
       // Don't fail completely if user email fails
       console.warn('⚠️ Proceeding even though user confirmation failed')
     }
@@ -124,10 +141,8 @@ const sendContactEmail = async (data) => {
     console.error('   Message:', error.message)
     console.error('   Code:', error.code)
     console.error('   Response:', error.response)
-    console.error('   Command:', error.command)
     console.error('\n')
     
-    // Even if email fails, we'll return a partial success since the message is stored
     throw error
   }
 }
@@ -155,78 +170,97 @@ export const submitContact = async (req, res) => {
     }
 
     console.log('✅ Form validation passed')
-    let savedContactId = null
-    let emailsSent = false
-    let errors = []
+    const ipAddress = req.ip
 
-    // 1️⃣ STEP 1: Save to MongoDB
-    try {
-      console.log('\n1️⃣ SAVING TO MONGODB...')
-      const ipAddress = req.ip
-      const contact = new Contact({
-        name,
-        email,
-        subject,
-        message,
-        phone,
-        ipAddress,
-      })
-      
-      // Set timeout for MongoDB save (3 seconds)
-      const savePromise = contact.save()
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('MongoDB save timeout')), 3000)
-      )
-      
-      const savedContact = await Promise.race([savePromise, timeoutPromise])
-      savedContactId = savedContact._id
-      console.log('✅ Saved to MongoDB. ID:', savedContactId)
-    } catch (dbError) {
-      console.warn('⚠️ MONGODB FAILED:', dbError.message)
-      errors.push('Database Save Failed: ' + dbError.message)
-      // Continue anyway - we'll use memory fallback
-    }
+    // 🚀 IMMEDIATELY store in memory and return response
+    console.log('\n⚡ QUICK RESPONSE: Storing in memory and responding immediately...')
+    const storedMessage = storeMessage({
+      name,
+      email,
+      subject,
+      message,
+      phone,
+      source: 'memory',
+      timestamp: new Date().toISOString()
+    })
+    console.log('✅ Message stored in memory. ID:', storedMessage.id)
 
-    // 2️⃣ STEP 2: Try to send emails
-    try {
-      console.log('\n2️⃣ SENDING EMAILS...')
-      await sendContactEmail({ name, email, message, subject })
-      emailsSent = true
-      console.log('✅ Emails sent successfully')
-    } catch (emailError) {
-      console.error('❌ EMAIL SENDING FAILED!')
-      console.error('   Error:', emailError.message)
-      errors.push('Email Error: ' + emailError.message)
-      // Continue - message was saved or will be in memory
-    }
-
-    // 3️⃣ STEP 3: Fallback to memory if needed
-    if (!savedContactId) {
-      console.log('\n3️⃣ USING MEMORY FALLBACK...')
-      const storedMessage = storeMessage({
-        name,
-        email,
-        subject,
-        message,
-        phone,
-        source: 'memory_fallback',
-        timestamp: new Date().toISOString()
-      })
-      console.log('✅ Message stored in memory. ID:', storedMessage.id)
-    }
-
-    // ✅ RETURN SUCCESS
+    // ✅ RETURN SUCCESS IMMEDIATELY
     console.log('\n' + '='.repeat(60))
-    console.log('✅ SUBMISSION PROCESSED SUCCESSFULLY')
+    console.log('✅ SUBMISSION PROCESSED - RESPONSE SENT IMMEDIATELY')
     console.log('='.repeat(60) + '\n')
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: 'Thank you! Your message has been received.',
-      contactId: savedContactId,
-      emailsSent: emailsSent,
-      errors: errors.length > 0 ? errors : undefined
+      contactId: storedMessage.id,
+      emailsSent: 'sending in background...'
     })
+
+    // 🔄 Now do the slow stuff in background WITHOUT blocking response
+    // User already got their response!
+
+    // STEP 1: Try to save to MongoDB in background (don't wait)
+    (async () => {
+      try {
+        console.log('\n[BACKGROUND] 1️⃣ SAVING TO MONGODB...')
+        const contact = new Contact({
+          name,
+          email,
+          subject,
+          message,
+          phone,
+          ipAddress,
+        })
+
+        const savedContact = await contact.save()
+        console.log('[BACKGROUND] ✅ Saved to MongoDB. ID:', savedContact._id)
+      } catch (dbError) {
+        console.warn('[BACKGROUND] ⚠️ MONGODB FAILED:', dbError.message)
+        // Continue - already responded to user
+      }
+    })()
+
+    // STEP 2: Try to send emails in background (don't wait)
+    (async () => {
+      let emailRetries = 0
+      const maxEmailRetries = 3
+      
+      const sendEmailWithRetry = async () => {
+        try {
+          console.log(`\n[BACKGROUND] 2️⃣ SENDING EMAILS (Attempt ${emailRetries + 1}/${maxEmailRetries})...`)
+          await sendContactEmail({ name, email, message, subject })
+          console.log('[BACKGROUND] ✅ Emails sent successfully')
+        } catch (emailError) {
+          emailRetries++
+          console.error(`[BACKGROUND] ❌ EMAIL ATTEMPT ${emailRetries} FAILED:`)
+          console.error('   Error:', emailError.message)
+          console.error('   Code:', emailError.code)
+          console.error('   Details:', emailError.response || 'No details')
+          
+          // Retry on temporary errors
+          if (emailRetries < maxEmailRetries && (
+            emailError.code === 'ENOTFOUND' || 
+            emailError.code === 'ETIMEDOUT' || 
+            emailError.code === 'ECONNREFUSED'
+          )) {
+            const waitTime = 1000 * emailRetries
+            console.log(`[BACKGROUND] ⏳ Retrying email in ${waitTime}ms...`)
+            setTimeout(sendEmailWithRetry, waitTime)
+          } else if (emailRetries < maxEmailRetries) {
+            const waitTime = 2000 * emailRetries
+            console.log(`[BACKGROUND] ⏳ Retrying email in ${waitTime}ms...`)
+            setTimeout(sendEmailWithRetry, waitTime)
+          } else {
+            console.error('[BACKGROUND] ⚠️ EMAIL FAILED AFTER ALL RETRIES')
+            // Store error for debugging
+            console.error('[BACKGROUND] FINAL ERROR:', emailError.message)
+          }
+        }
+      }
+      
+      sendEmailWithRetry()
+    })()
 
   } catch (error) {
     console.error('\n' + '❌'.repeat(30))
