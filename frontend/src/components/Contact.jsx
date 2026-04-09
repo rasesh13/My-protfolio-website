@@ -3,6 +3,7 @@ import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { API_ENDPOINTS } from '../config/api'
 import MagneticButton from './MagneticButton'
 import GlassCard from './GlassCard'
 import AnimatedSection from './AnimatedSection'
@@ -39,11 +40,7 @@ export default function Contact() {
     setError('')
     setLoading(true)
     try {
-      const apiUrl = import.meta.env.MODE === 'production' 
-        ? 'https://backend-alpha-ebon-24.vercel.app/api/contact'
-        : 'http://localhost:5000/api/contact'
-      
-      const response = await axios.post(apiUrl, formData)
+      const response = await axios.post(API_ENDPOINTS.CONTACT, formData)
       if (response.data.success) {
         setSubmitted(true)
         setFormData({ name: '', email: '', subject: '', message: '' })

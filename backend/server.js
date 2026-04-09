@@ -18,22 +18,8 @@ connectDB()
 
 // Middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'https://frontend-three-orcin-18.vercel.app',
-      'https://frontend-i2mkaay1k-rasesh13s-projects.vercel.app'
-    ]
-    
-    // Allow requests with no origin (like from curl requests or server-to-server)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
-  credentials: true,
+  origin: '*',
+  credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
@@ -300,14 +286,22 @@ app.use((err, req, res, next) => {
   })
 })
 
+// Start server
+const server = app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`)
+  console.log(`📚 API Documentation: http://localhost:${PORT}`)
+  console.log(`🏥 Health Check: http://localhost:${PORT}/health`)
+  console.log(`📧 Environment: ${process.env.NODE_ENV || 'development'}`)
+})
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Gracefully shutting down...')
+  server.close(() => {
+    console.log('Server closed')
+    process.exit(0)
+  })
+})
+
 // Export for Vercel serverless
 export default app
-
-// Start server locally only
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`)
-    console.log(`📚 API Documentation: http://localhost:${PORT}`)
-    console.log(`🏥 Health Check: http://localhost:${PORT}/health`)
-  })
-}

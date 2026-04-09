@@ -15,6 +15,12 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    define: {
+      'process.env.NODE_ENV': '"production"'
+    }
+  },
+  define: {
+    'import.meta.env.MODE': JSON.stringify(process.env.NODE_ENV || 'production')
   }
 })
