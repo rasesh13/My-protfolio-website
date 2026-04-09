@@ -40,52 +40,61 @@ export default function Contact() {
     setError('')
     setLoading(true)
     
-    try {
-      console.log('📤 Sending contact form to:', API_ENDPOINTS.CONTACT)
-      console.log('📝 Form data:', formData)
-      console.log('🌐 Frontend URL:', window.location.href)
-      
-      const response = await axios.post(API_ENDPOINTS.CONTACT, formData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        timeout: 10000 // 10 second timeout
-      })
-      
-      console.log('✅ Response:', response.data)
-      
-      if (response.data.success) {
-        setSubmitted(true)
-        setFormData({ name: '', email: '', subject: '', message: '' })
-      } else {
-        setError(response.data.message || 'Failed to send message. Please try again.')
+    let retries = 0
+    const maxRetries = 3
+    
+    const attemptSubmit = async () => {
+      try {
+        console.log(`📤 Attempt ${retries + 1}/${maxRetries}: Sending to:`, API_ENDPOINTS.CONTACT)
+        console.log('📝 Form data:', formData)
+        
+        const response = await axios.post(API_ENDPOINTS.CONTACT, formData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          timeout: 30000 // 30 second timeout (increased from 10)
+        })
+        
+        console.log('✅ Response:', response.data)
+        
+        if (response.data.success) {
+          setSubmitted(true)
+          setFormData({ name: '', email: '', subject: '', message: '' })
+        } else {
+          setError(response.data.message || 'Failed to send message. Please try again.')
+        }
+      } catch (error) {
+        retries++
+        
+        console.error(`❌ Attempt ${retries} failed:`, error.message)
+        
+        if (retries < maxRetries && (error.code === 'ECONNABORTED' || error.message === 'Network Error')) {
+          console.log(`⏳ Retrying in 3 seconds... (${retries}/${maxRetries})`)
+          setTimeout(attemptSubmit, 3000)
+          return
+        }
+        
+        // Handle specific error types
+        if (error.code === 'ECONNABORTED') {
+          setError('Request timeout. Backend is starting. Try again in 10 seconds.')
+        } else if (error.message === 'Network Error' || error.request && !error.response) {
+          setError('🌐 Backend is cold-starting. Please wait 15 seconds and try again.')
+        } else if (error.response?.status === 400) {
+          setError('Please fill all fields correctly:\n- Name: 2+ characters\n- Email: valid format\n- Subject: 2+ characters\n- Message: 5+ characters')
+        } else if (error.response?.status === 500) {
+          setError('Server error: ' + (error.response?.data?.message || 'Internal server error'))
+        } else if (error.response?.status === 0) {
+          setError('CORS error or backend not accessible.')
+        } else {
+          setError(error.response?.data?.message || 'Failed to send message: ' + error.message)
+        }
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('❌ Error sending message:', error)
-      console.error('Error type:', error.code)
-      console.error('Error response:', error.response?.data)
-      console.error('Error status:', error.response?.status)
-      console.error('Error message:', error.message)
-      console.error('Is network error?', error.message === 'Network Error')
-      
-      // Handle specific error types
-      if (error.code === 'ECONNABORTED') {
-        setError('Request timeout. Backend may be starting. Please try again in a moment.')
-      } else if (error.message === 'Network Error' || error.request && !error.response) {
-        setError('🌐 Network error: Cannot reach backend server. The backend might be cold-starting. Try again in 10 seconds.')
-      } else if (error.response?.status === 400) {
-        setError('Please fill all fields correctly:\n- Name: 2+ characters\n- Email: valid format\n- Subject: 2+ characters\n- Message: 5+ characters')
-      } else if (error.response?.status === 500) {
-        setError('Server error: ' + (error.response?.data?.message || 'Internal server error'))
-      } else if (error.response?.status === 0) {
-        setError('CORS error or backend not accessible. Please check if backend is running.')
-      } else {
-        setError(error.response?.data?.message || 'Failed to send message: ' + error.message)
-      }
-    } finally {
-      setLoading(false)
     }
+    
+    attemptSubmit()
   }
 
   const socialLinks = [

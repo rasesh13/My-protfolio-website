@@ -18,7 +18,18 @@ export default defineConfig({
     sourcemap: false,
     define: {
       'process.env.NODE_ENV': '"production"'
-    }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-three': ['three'],
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-animation': ['framer-motion'],
+          'vendor-http': ['axios']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
   },
   define: {
     'import.meta.env.MODE': JSON.stringify(process.env.NODE_ENV || 'production')
