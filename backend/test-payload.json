@@ -1,0 +1,6 @@
+{
+  "name": "Test User",
+  "email": "testuser@example.com",
+  "subject": "Test Subject from API",
+  "message": "This is a test message to verify email functionality"
+}

@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import mongoose from 'mongoose'
 import connectDB from './config/database.js'
 import contactRoutes from './routes/contact.js'
 import chatbotRoutes from './routes/chatbot.js'
@@ -13,8 +14,10 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// Connect to MongoDB
-connectDB()
+// Connect to MongoDB as soon as server starts
+connectDB().catch(err => {
+  console.error('Failed to connect to MongoDB during startup:', err.message)
+})
 
 // Middleware
 app.use(cors({
@@ -72,61 +75,20 @@ app.get('/warmup', (req, res) => {
   })
 })
 
-// Test endpoint (for debugging)
-app.post('/api/test', (req, res) => {
-  try {
-    console.log('Test endpoint called')
-    console.log('Request body:', req.body)
-    console.log('Environment check:', {
-      hasMongoUri: !!process.env.MONGODB_URI,
-      hasEmailUser: !!process.env.EMAIL_USER,
-      hasEmailPassword: !!process.env.EMAIL_PASSWORD,
-      nodeEnv: process.env.NODE_ENV
-    })
-    
-    res.json({
-      success: true,
-      message: 'Test successful - API is responding',
-      received: req.body,
-      serverInfo: {
-        timestamp: new Date(),
-        environment: process.env.NODE_ENV || 'development',
-        hasRequiredEnv: {
-          mongodb: !!process.env.MONGODB_URI,
-          email: !!(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD)
-        }
-      }
-    })
-  } catch (error) {
-    console.error('Test error:', error)
-    res.status(500).json({
-      success: false,
-      error: error.message
-    })
-  }
-})
-
-// Test email endpoint - send test email to verify configuration
+// TEST EMAIL ENDPOINT
 const testEmailHandler = async (req, res) => {
   try {
     console.log('\n🧪 TEST EMAIL ENDPOINT CALLED')
     
-    // Check environment variables
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
       return res.status(400).json({
         success: false,
-        error: 'Email credentials not configured',
-        missing: {
-          emailUser: !process.env.EMAIL_USER,
-          emailPassword: !process.env.EMAIL_PASSWORD
-        }
+        error: 'Email credentials not configured'
       })
     }
 
-    // Import nodemailer here to test
     const nodemailer = (await import('nodemailer')).default
     
-    console.log('Creating email transporter...')
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -135,48 +97,26 @@ const testEmailHandler = async (req, res) => {
       },
     })
 
-    // VERIFY SMTP CONNECTION
-    console.log('🔍 Verifying SMTP connection...')
-    try {
-      await transporter.verify()
-      console.log('✅ SMTP connection verified successfully!')
-    } catch (verifyError) {
-      console.error('❌ SMTP verification failed!')
-      console.error('   Error:', verifyError.message)
-      return res.status(500).json({
-        success: false,
-        error: 'SMTP verification failed: ' + verifyError.message,
-        details: {
-          code: verifyError.code,
-          message: verifyError.message
-        }
-      })
-    }
-
     const testEmail = process.env.EMAIL_USER
     
     console.log('Sending test email to:', testEmail)
     const result = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: testEmail,
-      subject: '🧪 Portfolio Test Email - Configuration Verified',
-      text: 'Test email from portfolio backend',
+      subject: '🧪 Portfolio Test Email',
       html: `
-        <h2>✅ Test Email Successful!</h2>
-        <p>Your email configuration is working correctly on Vercel.</p>
-        <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
-        <p><strong>From:</strong> ${process.env.EMAIL_USER}</p>
+        <h2>✅ Test Email Works!</h2>
+        <p>Your email is configured and working.</p>
+        <p>${new Date().toISOString()}</p>
       `,
     })
 
-    console.log('✅ Test email sent! Message ID:', result.messageId)
+    console.log('✅ Test email sent! ID:', result.messageId)
     
     res.json({
       success: true,
-      message: 'Test email sent successfully!',
-      email: testEmail,
-      messageId: result.messageId,
-      timestamp: new Date().toISOString()
+      message: 'Test email sent!',
+      messageId: result.messageId
     })
   } catch (error) {
     console.error('❌ Test email failed:', error.message)
