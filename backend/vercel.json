@@ -3,5 +3,12 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "public": true
+  "public": true,
+  "functions": {
+    "*.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
 }
+

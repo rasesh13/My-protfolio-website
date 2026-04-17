@@ -66,13 +66,32 @@ app.get('/health', (req, res) => {
 })
 
 // Warmup endpoint - keeps serverless warm, initializes DB connection
-app.get('/warmup', (req, res) => {
-  console.log('🔥 Warmup request received - keeping server warm')
-  res.status(200).json({
-    status: 'Warmup successful',
-    timestamp: new Date(),
-    message: 'Backend is warmed up and ready'
-  })
+app.get('/warmup', async (req, res) => {
+  try {
+    console.log('🔥 Warmup request received - keeping server warm')
+    
+    // Ensure MongoDB connection is active
+    if (mongoose.connection.readyState !== 1) {
+      console.log('⏳ MongoDB not connected, attempting connection...')
+      await connectDB()
+    }
+    
+    console.log('✅ Warmup complete - server is warm and ready')
+    res.status(200).json({
+      status: 'Warmup successful',
+      timestamp: new Date(),
+      message: 'Backend is warmed up and ready',
+      mongooseState: mongoose.connection.readyState,
+      database: mongoose.connection.name || 'not connected'
+    })
+  } catch (error) {
+    console.error('⚠️ Warmup error:', error.message)
+    res.status(200).json({
+      status: 'Warmup partial',
+      message: 'Server responding but database may be initializing',
+      timestamp: new Date()
+    })
+  }
 })
 
 // TEST EMAIL ENDPOINT

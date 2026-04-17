@@ -22,13 +22,17 @@ const connectDB = async () => {
       useUnifiedTopology: true,
       maxPoolSize: 10,
       minPoolSize: 2,
-      socketTimeoutMS: 45000,
-      serverSelectionTimeoutMS: 5000,
-      connectionTimeoutMS: 10000,
+      socketTimeoutMS: 60000,  // 60 seconds
+      serverSelectionTimeoutMS: 10000,  // 10 seconds
+      connectionTimeoutMS: 15000,  // 15 seconds
+      // Vercel specific optimizations
+      retryWrites: true,
+      w: 'majority',
     })
 
     cachedConnection = connection
     console.log('✅ MongoDB connected successfully')
+    console.log('📊 Connection Pool: min=2, max=10')
     return connection
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message)
