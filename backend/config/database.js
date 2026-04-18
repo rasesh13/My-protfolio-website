@@ -24,7 +24,7 @@ const connectDB = async () => {
       minPoolSize: 2,
       socketTimeoutMS: 60000,  // 60 seconds
       serverSelectionTimeoutMS: 10000,  // 10 seconds
-      connectionTimeoutMS: 15000,  // 15 seconds
+      family: 4,  // Use IPv4
       // Vercel specific optimizations
       retryWrites: true,
       w: 'majority',

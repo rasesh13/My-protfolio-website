@@ -354,22 +354,24 @@ app.use((err, req, res, next) => {
   })
 })
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`)
-  console.log(`📚 API Documentation: http://localhost:${PORT}`)
-  console.log(`🏥 Health Check: http://localhost:${PORT}/health`)
-  console.log(`📧 Environment: ${process.env.NODE_ENV || 'development'}`)
-})
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Gracefully shutting down...')
-  server.close(() => {
-    console.log('Server closed')
-    process.exit(0)
+// Only start server if not on Vercel (Vercel will handle the serverless function)
+if (process.env.VERCEL !== '1') {
+  const server = app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`)
+    console.log(`📚 API Documentation: http://localhost:${PORT}`)
+    console.log(`🏥 Health Check: http://localhost:${PORT}/health`)
+    console.log(`📧 Environment: ${process.env.NODE_ENV || 'development'}`)
   })
-})
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received. Gracefully shutting down...')
+    server.close(() => {
+      console.log('Server closed')
+      process.exit(0)
+    })
+  })
+}
 
 // Export for Vercel serverless
 export default app

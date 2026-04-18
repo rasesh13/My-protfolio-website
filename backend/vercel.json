@@ -3,9 +3,20 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "public": true,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ],
   "functions": {
-    "*.js": {
+    "server.js": {
       "memory": 1024,
       "maxDuration": 60
     }
