@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaTimes, FaPaperPlane } from 'react-icons/fa'
-import aiOrbImage from '/images/ai-orb.png'
 
 const knowledgeBase = {
   about: {
@@ -22,7 +21,7 @@ const knowledgeBase = {
   },
   contact: {
     keywords: ['contact', 'reach', 'email', 'phone', 'connect', 'linkedin', 'github'],
-    response: "📧 Let's connect!\n• Email: rasesh@example.com\n• LinkedIn: linkedin.com/in/rasesh\n• GitHub: github.com/rasesh\n• Twitter: @rasesh_dev"
+    response: "📧 Let's connect!\n• Email: raseshvarshney82@gmail.com\n• LinkedIn: linkedin.com/in/rasesh\n• GitHub: github.com/rasesh13\n• Twitter: @rasesh_dev"
   },
   default: {
     keywords: [],
