@@ -1,0 +1,17 @@
+{
+  "serviceName": "portfolio-backend",
+  "repository": "My-protfolio-website",
+  "rootDirectory": "backend",
+  "branch": "main",
+  "buildCommand": "npm install",
+  "startCommand": "npm start",
+  "region": "oregon",
+  "plan": "free",
+  "environmentVariables": {
+    "NODE_ENV": "production",
+    "PORT": "5000",
+    "MONGODB_URI": "mongodb+srv://raseshvarshney82_db_user:Yuga8ajJwiF9NTul@cluster0.3oo80at.mongodb.net/portfolio?retryWrites=true&w=majority&appName=Cluster0",
+    "EMAIL_USER": "raseshvarshney82@gmail.com",
+    "EMAIL_PASSWORD": "nluiozutoqqaqmcq"
+  }
+}

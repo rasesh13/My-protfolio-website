@@ -43,7 +43,7 @@ async function redeploy() {
     })
 
     // Find portfolio frontend project
-    const portfolioProject = projectsResponse.data.projects.find(p => p.name === 'portfolio')
+    const portfolioProject = projectsResponse.data.projects.find(p => p.name === 'my-protfolio-website' || p.name === 'portfolio' || p.name === 'frontend')
 
     if (!portfolioProject) {
       console.error('❌ ERROR: Could not find "portfolio" project on Vercel\n')
@@ -57,7 +57,8 @@ async function redeploy() {
 
     console.log(`📌 Found project: ${portfolioProject.name}`)
     console.log(`   ID: ${portfolioProject.id}`)
-    console.log(`   URL: https://${portfolioProject.domains[0]}\n`)
+    const domain = portfolioProject.domains && portfolioProject.domains[0] ? portfolioProject.domains[0] : `${portfolioProject.name}.vercel.app`
+    console.log(`   URL: https://${domain}\n`)
 
     // Trigger redeploy
     console.log('⏳ Triggering redeploy...\n')
