@@ -24,13 +24,10 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://my-protfolio-website.vercel.app',
     'https://frontend-three-orcin-18.vercel.app',
-    'https://frontend-d3y6vaiao-rasesh13s-projects.vercel.app',
-    'https://frontend-mm9t239dh-rasesh13s-projects.vercel.app',
-    'https://frontend-5oyk8g3xk-rasesh13s-projects.vercel.app',
-    'https://frontend-kupuyv0r8-rasesh13s-projects.vercel.app',
-    'https://frontend-o7qtmxyoy-rasesh13s-projects.vercel.app',
-    'https://frontend-64he5npe9-rasesh13s-projects.vercel.app',
+    'https://frontend-81vskykob-rasesh13s-projects.vercel.app',
+    /^https:\/\/frontend-.*\.vercel\.app$/,
     '*'
   ],
   credentials: false,
