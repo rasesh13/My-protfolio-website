@@ -62,21 +62,37 @@ async function deployToRender() {
     console.log('🔌 Connecting to Render API...')
 
     // Get user account info to retrieve ownerID
-    const accountResponse = await axios.get('https://api.render.com/v1/teams', {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+    let ownerId = null
+    try {
+      const accountResponse = await axios.get('https://api.render.com/v1/account', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      ownerId = accountResponse.data.id
+      console.log(`✅ Retrieved Account ID: ${ownerId}\n`)
+    } catch (e) {
+      // Try alternative endpoint
+      try {
+        const teamsResponse = await axios.get('https://api.render.com/v1/organizations', {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        ownerId = teamsResponse.data[0]?.id
+        if (ownerId) console.log(`✅ Retrieved Account ID: ${ownerId}\n`)
+      } catch (e2) {
+        console.log('⚠️  Could not retrieve account ID, attempting deployment anyway...\n')
       }
-    })
-
-    const ownerId = accountResponse.data[0].id
-    console.log(`✅ Retrieved Account ID: ${ownerId}\n`)
+    }
 
     // Create service payload
     const payload = {
       service: {
         name: deployConfig.name,
-        ownerId: ownerId,
+        ...(ownerId && { ownerId }),
         type: 'web_service',
         environmentId: 'nue',
         plan: 'free',
