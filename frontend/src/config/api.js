@@ -5,7 +5,7 @@ const isDevelopment = window.location.hostname === 'localhost' || window.locatio
 // Always use HTTPS for production backend
 const API_BASE = isDevelopment
   ? 'http://localhost:5000'
-  : 'https://backend-alpha-ebon-24.vercel.app'
+  : 'https://my-protfolio-website-uh8o.onrender.com'
 
 console.log('🔗 API Base URL:', API_BASE)
 console.log('Frontend Hostname:', window.location.hostname)
