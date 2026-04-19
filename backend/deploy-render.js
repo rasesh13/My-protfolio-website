@@ -59,11 +59,24 @@ async function deployToRender() {
     console.log(`   • Build Command: ${deployConfig.buildCommand}`)
     console.log(`   • Start Command: ${deployConfig.startCommand}\n`)
 
+    console.log('🔌 Connecting to Render API...')
+
+    // Get user account info to retrieve ownerID
+    const accountResponse = await axios.get('https://api.render.com/v1/teams', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    const ownerId = accountResponse.data[0].id
+    console.log(`✅ Retrieved Account ID: ${ownerId}\n`)
+
     // Create service payload
     const payload = {
       service: {
         name: deployConfig.name,
-        ownerId: null, // Will use authenticated user
+        ownerId: ownerId,
         type: 'web_service',
         environmentId: 'nue',
         plan: 'free',
@@ -81,7 +94,7 @@ async function deployToRender() {
       }
     }
 
-    console.log('🔌 Connecting to Render API...')
+    console.log('📤 Submitting deployment to Render...')
     
     // Create service via Render API
     const response = await axios.post('https://api.render.com/v1/services', payload.service, {
