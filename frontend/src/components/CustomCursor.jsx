@@ -6,15 +6,14 @@ export default function CustomCursor() {
 
   useEffect(() => {
     const handleMouseMove = (e) => {
+      // ZERO DELAY - direct instant update
       if (cursorRef.current) {
-        cursorRef.current.style.left = e.clientX + 'px'
-        cursorRef.current.style.top = e.clientY + 'px'
+        cursorRef.current.style.transform = `translate(${e.clientX - 15}px, ${e.clientY - 15}px)`
         cursorRef.current.style.opacity = '1'
       }
       if (dotRef.current) {
-        dotRef.current.style.left = (e.clientX - 3) + 'px'
-        dotRef.current.style.top = (e.clientY - 3) + 'px'
-        dotRef.current.style.opacity = '0.5'
+        dotRef.current.style.transform = `translate(${e.clientX - 3}px, ${e.clientY - 3}px)`
+        dotRef.current.style.opacity = '0.6'
       }
     }
 
@@ -25,10 +24,11 @@ export default function CustomCursor() {
 
     const handleMouseEnter = () => {
       if (cursorRef.current) cursorRef.current.style.opacity = '1'
-      if (dotRef.current) dotRef.current.style.opacity = '0.5'
+      if (dotRef.current) dotRef.current.style.opacity = '0.6'
     }
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    // Passive listener = NO delay, NO blocking
+    window.addEventListener('mousemove', handleMouseMove, { passive: true, capture: false })
     window.addEventListener('mouseleave', handleMouseLeave)
     window.addEventListener('mouseenter', handleMouseEnter)
 
@@ -42,14 +42,57 @@ export default function CustomCursor() {
   return (
     <>
       <style>{`
-        * { cursor: none !important; }
-        [data-chatbot-wrapper], [data-chatbot-wrapper] *, [data-chatbot-window], [data-chatbot-window] * { cursor: auto !important; }
-        input, textarea, button, a { cursor: auto !important; }
+        * { 
+          cursor: none !important; 
+        }
+        
+        [data-chatbot-wrapper],
+        [data-chatbot-wrapper] *,
+        [data-chatbot-window],
+        [data-chatbot-window] * { 
+          cursor: auto !important; 
+        }
+        
+        input, textarea, button, a, [role="button"] { 
+          cursor: auto !important; 
+        }
       `}</style>
 
-      <div ref={dotRef} style={{ position: 'fixed', width: '6px', height: '6px', background: '#00d9ff', borderRadius: '50%', pointerEvents: 'none', zIndex: 99998, boxShadow: '0 0 10px rgba(0, 217, 255, 0.6)', transition: 'opacity 0.3s', opacity: 0 }} />
-      
-      <div ref={cursorRef} style={{ position: 'fixed', width: '30px', height: '30px', border: '2px solid #00d9ff', borderRadius: '50%', pointerEvents: 'none', zIndex: 99997, marginLeft: '-15px', marginTop: '-15px', boxShadow: '0 0 15px rgba(0, 217, 255, 0.4)', transition: 'opacity 0.3s', opacity: 0 }} />
+      {/* Cursor Ring - INSTANT, NO TRANSITIONS */}
+      <div
+        ref={cursorRef}
+        style={{
+          position: 'fixed',
+          width: '30px',
+          height: '30px',
+          border: '2px solid #00d9ff',
+          borderRadius: '50%',
+          pointerEvents: 'none',
+          zIndex: 99997,
+          boxShadow: '0 0 15px rgba(0, 217, 255, 0.5)',
+          opacity: 0,
+          willChange: 'transform',
+          WebkitWillChange: 'transform'
+        }}
+      />
+
+      {/* Cursor Dot - INSTANT, NO TRANSITIONS */}
+      <div
+        ref={dotRef}
+        style={{
+          position: 'fixed',
+          width: '6px',
+          height: '6px',
+          background: '#00d9ff',
+          borderRadius: '50%',
+          pointerEvents: 'none',
+          zIndex: 99998,
+          boxShadow: '0 0 8px rgba(0, 217, 255, 0.8)',
+          opacity: 0,
+          willChange: 'transform',
+          WebkitWillChange: 'transform'
+        }}
+      />
     </>
   )
 }
