@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaTimes, FaPaperPlane } from 'react-icons/fa'
+import { FaTimes, FaPaperPlane, FaRobot } from 'react-icons/fa'
 
 const knowledgeBase = {
   about: {
@@ -133,14 +133,11 @@ export default function Chatbot() {
         />
         
         {/* AI Orb Icon */}
-        <img
-          src={aiOrbImage}
-          alt="AI Chat"
+        <FaRobot
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            borderRadius: '50%',
+            width: '36px',
+            height: '36px',
+            color: '#06b6d4',
             pointerEvents: 'auto',
           }}
         />
