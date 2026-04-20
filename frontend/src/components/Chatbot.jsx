@@ -95,7 +95,7 @@ export default function Chatbot() {
       onTouchStart={(e) => e.stopPropagation()}
       onTouchEnd={(e) => e.stopPropagation()}
     >
-      {/* Chat Button - AI Orb - BRIGHT CYAN */}
+      {/* Chat Button - AI Orb */}
       <motion.button
         whileHover={{ scale: 1.15 }}
         whileTap={{ scale: 0.95 }}
@@ -108,7 +108,7 @@ export default function Chatbot() {
           height: '80px',
           borderRadius: '50%',
           border: 'none',
-          background: 'linear-gradient(135deg, #00d9ff 0%, #0891b2 100%)',
+          background: 'transparent',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -116,50 +116,38 @@ export default function Chatbot() {
           pointerEvents: 'auto',
           zIndex: 99999,
           padding: 0,
-          boxShadow: '0 0 30px rgba(0, 217, 255, 0.8), 0 0 60px rgba(0, 217, 255, 0.4)',
+          boxShadow: 'none',
           transition: 'all 0.3s ease',
         }}
       >
-        {/* Glow effect */}
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{
-            position: 'absolute',
-            inset: '-15px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(0, 217, 255, 0.4), transparent)',
-            zIndex: -1,
-          }}
-        />
-        
-        {/* AI Orb Image */}
+        {/* AI Orb Image - CLEAN, NO GLOW */}
         <img
           src="/images/ai-orb.png"
           alt="AI Orb"
           style={{
-            width: '60px',
-            height: '60px',
+            width: '80px',
+            height: '80px',
             objectFit: 'contain',
             pointerEvents: 'auto',
+            borderRadius: '50%',
           }}
         />
         
-        {/* Notification dot when closed */}
+        {/* Notification dot when closed - MINIMAL */}
         {!isOpen && (
           <motion.div
             animate={{ scale: [1, 1.25, 1], opacity: [1, 0.8, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
             style={{
               position: 'absolute',
-              width: '14px',
-              height: '14px',
-              background: 'linear-gradient(135deg, #ff3b30, #ff6b6b)',
+              width: '10px',
+              height: '10px',
+              background: '#ff3b30',
               borderRadius: '50%',
-              top: '-4px',
-              right: '-4px',
-              boxShadow: '0 0 12px rgba(255, 59, 48, 0.9)',
-              border: '2px solid rgba(15, 23, 42, 0.95)',
+              top: '-2px',
+              right: '-2px',
+              boxShadow: '0 0 8px rgba(255, 59, 48, 0.9)',
+              border: 'none',
             }}
           />
         )}
