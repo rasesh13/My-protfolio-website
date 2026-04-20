@@ -132,15 +132,26 @@ export default function Chatbot() {
           }}
         />
         
-        {/* AI Orb Icon */}
-        <FaRobot
-          style={{
-            width: '36px',
-            height: '36px',
-            color: '#06b6d4',
-            pointerEvents: 'auto',
-          }}
-        />
+        {/* AI Orb Icon - Larger and more visible */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          background: isOpen ? 'linear-gradient(135deg, #06b6d4, #0891b2)' : 'linear-gradient(135deg, #06b6d4, #00d9ff)',
+          borderRadius: '50%',
+          boxShadow: '0 0 20px rgba(6, 182, 212, 0.6)',
+        }}>
+          <FaRobot
+            style={{
+              width: '40px',
+              height: '40px',
+              color: '#ffffff',
+              pointerEvents: 'auto',
+            }}
+          />
+        </div>
         
         {/* Notification dot when closed */}
         {!isOpen && (

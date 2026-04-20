@@ -7,6 +7,11 @@ const API_BASE = isDevelopment
   ? 'http://localhost:5000'
   : (import.meta.env.VITE_API_URL_PROD || 'https://my-protfolio-website-uh8o.onrender.com')
 
+// Add CORS headers globally
+if (!isDevelopment) {
+  console.log('🌍 Production mode - Using Render backend with CORS')
+}
+
 console.log('🔗 API Base URL:', API_BASE)
 console.log('Frontend Hostname:', window.location.hostname)
 console.log('Frontend Protocol:', window.location.protocol)

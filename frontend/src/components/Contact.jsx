@@ -79,8 +79,10 @@ export default function Contact() {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'Access-Control-Allow-Credentials': 'true',
           },
-          timeout: 15000
+          timeout: 20000,
+          withCredentials: false
         })
         
         console.log('✅ SUCCESS! Response:', response.data)

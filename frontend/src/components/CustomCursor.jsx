@@ -9,9 +9,18 @@ export default function CustomCursor() {
   const dotRef = useRef(null)
 
   useEffect(() => {
+    let animationId
+    
     const handleMouseMove = (e) => {
       setMousePosition({ x: e.clientX, y: e.clientY })
       setIsVisible(true)
+      
+      // Update cursor immediately without lag
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+        cursorRef.current.style.left = '0'
+        cursorRef.current.style.top = '0'
+      }
     }
 
     const handleMouseLeave = () => {
