@@ -25,19 +25,22 @@ app.use(cors({
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://my-protfolio-website.vercel.app',
+    'https://my-protfolio-website-delta.vercel.app',
     'https://frontend-three-orcin-18.vercel.app',
     'https://frontend-81vskykob-rasesh13s-projects.vercel.app',
-    /^https:\/\/frontend-.*\.vercel\.app$/,
+    'https://frontend-6wpmpcxmx-rasesh13s-projects.vercel.app',
+    /^https:\/\/.*\.vercel\.app$/,
     '*'
   ],
-  credentials: false,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', '*'],
   optionsSuccessStatus: 200,
-  exposedHeaders: ['Content-Length', 'X-JSON-Response']
+  exposedHeaders: ['Content-Length', 'X-JSON-Response'],
+  maxAge: 86400
 }))
 
-// Handle preflight requests explicitly
+// Handle preflight requests BEFORE other middleware
 app.options('*', cors())
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
