@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import axios from 'axios'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import CursorGlow from './components/CursorGlow'
@@ -58,6 +59,9 @@ export default function App() {
         </div>
         <Footer />
       </div>
+
+      {/* Vercel Speed Insights */}
+      <SpeedInsights />
     </div>
   )
 }
