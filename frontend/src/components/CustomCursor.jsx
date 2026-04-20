@@ -6,7 +6,6 @@ export default function CustomCursor() {
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      // INSTANT cursor movement - no state, direct DOM
       if (cursorRef.current) {
         cursorRef.current.style.left = e.clientX + 'px'
         cursorRef.current.style.top = e.clientY + 'px'
@@ -20,10 +19,6 @@ export default function CustomCursor() {
     }
 
     const handleMouseLeave = () => {
-      setIsVisible(false)
-    }
-
-    const handleMouseEnter = () => {
       if (cursorRef.current) cursorRef.current.style.opacity = '0'
       if (dotRef.current) dotRef.current.style.opacity = '0'
     }
@@ -40,69 +35,21 @@ export default function CustomCursor() {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseleave', handleMouseLeave)
-      window.removeEventListener('mouseenter', handleMouseEnter
+      window.removeEventListener('mouseenter', handleMouseEnter)
+    }
+  }, [])
+
+  return (
     <>
       <style>{`
-        * {
-          cursor: none !important;
-        }
-        
-        /* CRITICAL: Show default cursor on chatbot */
-        [data-chatbot-wrapper],
-        [data-chatbot-wrapper] *,
-        [data-chatbot-window],
-        [data-chatbot-window] * {
-          cursor: auto !important;
-        }
-        
-        /* Ensure input field shows text cursor */
-        [data-chatbot-wrapper] input,
-        [data-chatbot-wrapper] textarea {
-          cursor: text !important;
-        }
-        
-        /* Ensure buttons show pointer cursor */
-        [data-chatbot-wrapper] button {
-          cursor: pointer !important;
-        }
+        * { cursor: none !important; }
+        [data-chatbot-wrapper], [data-chatbot-wrapper] *, [data-chatbot-window], [data-chatbot-window] * { cursor: auto !important; }
+        input, textarea, button, a { cursor: auto !important; }
       `}</style>
+
+      <div ref={dotRef} style={{ position: 'fixed', width: '6px', height: '6px', background: '#00d9ff', borderRadius: '50%', pointerEvents: 'none', zIndex: 99998, boxShadow: '0 0 10px rgba(0, 217, 255, 0.6)', transition: 'opacity 0.3s', opacity: 0 }} />
       
-      {isVisible && (
-        <>
-          {/* Outer ring */}
-          <mhatbot always shows default cursor */
-        [data-chatbot-wrapper],
-        [data-chatbot-wrapper] *,
-        [data-chatbot-window],
-        [data-chatbot-window] * {
-          cursor: auto !important;
-        }
-        
-        input, textarea, button, a {
-          cursor: autodius: '50%',
-              backdropFilter: 'blur(2px)',
-            }}
-          />
-          
-          {/* Inner dot */}
-          <motion.div
-            ref={dotRef}
-            animate={{
-              x: mousePosition.x - 4,
-              y: mousePosition.y - 4,
-              scale: isHovering ? 0.5 : 1,
-              opacity: isHovering ? 0.7 : 1,
-            }}
-            transition={{ type: 'spring', stiffness: 1200, damping: 15 }}
-            className="fixed w-2 h-2 pointer-events-none z-[9999]"
-            style={{
-              background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
-              borderRadius: '50%',
-              boxShadow: '0 0 20px rgba(6, 182, 212, 0.6)',
-            }}
-          />
-        </>
-      )}
+      <div ref={cursorRef} style={{ position: 'fixed', width: '30px', height: '30px', border: '2px solid #00d9ff', borderRadius: '50%', pointerEvents: 'none', zIndex: 99997, marginLeft: '-15px', marginTop: '-15px', boxShadow: '0 0 15px rgba(0, 217, 255, 0.4)', transition: 'opacity 0.3s', opacity: 0 }} />
     </>
   )
 }

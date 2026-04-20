@@ -94,18 +94,6 @@ export default function Contact() {
     }
     
     attemptSubmit()
-          setError('Server error: ' + (error.response?.data?.message || 'Internal server error'))
-        } else if (error.response?.status === 0) {
-          setError('CORS error. Backend may be blocked.')
-        } else {
-          setError(error.response?.data?.message || 'Failed to send message: ' + error.message)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-    
-    attemptSubmit()
   }
 
   const socialLinks = [
