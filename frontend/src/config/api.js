@@ -2,10 +2,10 @@
 // Detect environment at runtime
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
-// Always use HTTPS for production backend
+// Use environment variable or fallback to Render backend
 const API_BASE = isDevelopment
   ? 'http://localhost:5000'
-  : 'https://my-protfolio-website-uh8o.onrender.com'
+  : (import.meta.env.VITE_API_URL_PROD || 'https://my-protfolio-website-uh8o.onrender.com')
 
 console.log('🔗 API Base URL:', API_BASE)
 console.log('Frontend Hostname:', window.location.hostname)
