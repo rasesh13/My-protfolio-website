@@ -4,7 +4,6 @@ import axios from 'axios'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import CursorGlow from './components/CursorGlow'
-import CustomCursor from './components/CustomCursor'
 import ParticleBackground from './components/ParticleBackground'
 import Chatbot from './components/Chatbot'
 import { API_ENDPOINTS } from './config/api'
@@ -47,7 +46,6 @@ export default function App() {
   return (
     <div className="w-full overflow-x-hidden bg-black relative">
       {/* Premium visual effects */}
-      <CustomCursor />
       <ParticleBackground />
       <CursorGlow />
       <Chatbot />
