@@ -95,20 +95,20 @@ export default function Chatbot() {
       onTouchStart={(e) => e.stopPropagation()}
       onTouchEnd={(e) => e.stopPropagation()}
     >
-      {/* Chat Button - AI Orb */}
+      {/* Chat Button - AI Orb - BRIGHT CYAN */}
       <motion.button
-        whileHover={{ scale: 1.12 }}
-        whileTap={{ scale: 0.92 }}
+        whileHover={{ scale: 1.15 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          width: '70px',
-          height: '70px',
+          bottom: '30px',
+          right: '30px',
+          width: '80px',
+          height: '80px',
           borderRadius: '50%',
           border: 'none',
-          background: 'transparent',
+          background: 'linear-gradient(135deg, #00d9ff 0%, #0891b2 100%)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -116,42 +116,32 @@ export default function Chatbot() {
           pointerEvents: 'auto',
           zIndex: 99999,
           padding: 0,
-          boxShadow: 'none',
+          boxShadow: '0 0 30px rgba(0, 217, 255, 0.8), 0 0 60px rgba(0, 217, 255, 0.4)',
+          transition: 'all 0.3s ease',
         }}
       >
-        {/* Animated backdrop glow on hover */}
+        {/* Glow effect */}
         <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 2.5, repeat: Infinity }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
           style={{
             position: 'absolute',
-            inset: '-8px',
+            inset: '-15px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(6, 182, 212, 0.3), transparent)',
+            background: 'radial-gradient(circle, rgba(0, 217, 255, 0.4), transparent)',
             zIndex: -1,
           }}
         />
         
-        {/* AI Orb Icon - Larger and more visible */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          height: '100%',
-          background: isOpen ? 'linear-gradient(135deg, #06b6d4, #0891b2)' : 'linear-gradient(135deg, #06b6d4, #00d9ff)',
-          borderRadius: '50%',
-          boxShadow: '0 0 20px rgba(6, 182, 212, 0.6)',
-        }}>
-          <FaRobot
-            style={{
-              width: '40px',
-              height: '40px',
-              color: '#ffffff',
-              pointerEvents: 'auto',
-            }}
-          />
-        </div>
+        {/* Robot Icon - WHITE and BIG */}
+        <FaRobot
+          style={{
+            width: '45px',
+            height: '45px',
+            color: '#ffffff',
+            pointerEvents: 'auto',
+          }}
+        />
         
         {/* Notification dot when closed */}
         {!isOpen && (

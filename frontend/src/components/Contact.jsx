@@ -64,62 +64,36 @@ export default function Contact() {
     
     setError('')
     setLoading(true)
-    console.log('✅ Frontend validation passed. Sending to backend...')
-    console.log('📤 API Endpoint:', API_ENDPOINTS.CONTACT)
+    console.log('📤 Sending to:', API_ENDPOINTS.CONTACT)
     
-    let retries = 0
-    const maxRetries = 5
-    
-    const attemptSubmit = async () => {
+    const attemptSubmit = async (attempt = 1) => {
       try {
-        console.log(`\n📤 Attempt ${retries + 1}/${maxRetries} to: ${API_ENDPOINTS.CONTACT}`)
-        console.log('📦 Payload:', formData)
+        const response = await axios.post(
+          API_ENDPOINTS.CONTACT,
+          formData,
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 20000
+          }
+        )
         
-        const response = await axios.post(API_ENDPOINTS.CONTACT, formData, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Access-Control-Allow-Credentials': 'true',
-          },
-          timeout: 20000,
-          withCredentials: false
-        })
-        
-        console.log('✅ SUCCESS! Response:', response.data)
-        
-        if (response.data.success) {
-          console.log('🎉 Form submitted successfully!')
-          setSubmitted(true)
-          setFormData({ name: '', email: '', subject: '', message: '' })
-        } else {
-          console.error('❌ Response success=false:', response.data)
-          setError(response.data.message || 'Failed to send message. Please try again.')
-        }
+        console.log('✅ Success:', response.data)
+        setSubmitted(true)
+        setFormData({ name: '', email: '', subject: '', message: '' })
+        setLoading(false)
       } catch (error) {
-        retries++
+        console.error(`Attempt ${attempt} failed:`, error.message)
         
-        console.error(`\n❌ ATTEMPT ${retries} FAILED:`)
-        console.error('   Error Message:', error.message)
-        console.error('   Error Code:', error.code)
-        console.error('   Status:', error.response?.status)
-        console.error('   Response:', error.response?.data)
-        
-        // Retry on timeout or network errors
-        if (retries < maxRetries && (error.code === 'ECONNABORTED' || error.message === 'Network Error' || error.code === 'ENOTFOUND' || !error.response)) {
-          const retryDelay = Math.min(1000 * retries, 3000)
-          console.log(`⏳ Retrying in ${retryDelay}ms... (${retries}/${maxRetries})`)
-          setTimeout(attemptSubmit, retryDelay)
-          return
+        if (attempt < 3) {
+          setTimeout(() => attemptSubmit(attempt + 1), 1000)
+        } else {
+          setError('Cannot reach backend. Please check your connection.')
+          setLoading(false)
         }
-        
-        // Handle specific error types
-        if (error.code === 'ECONNABORTED') {
-          setError('⏱️ Request took too long. Please try again.')
-        } else if (error.message === 'Network Error' || !error.response || error.code === 'ENOTFOUND') {
-          setError(`🌐 Cannot reach backend (attempt ${retries}/${maxRetries}). Checking connection...`)
-        } else if (error.response?.status === 400) {
-          setError('Please fill all fields correctly:\n- Name: 2+ characters\n- Email: valid format\n- Subject: 2+ characters\n- Message: 5+ characters')
-        } else if (error.response?.status === 500) {
+      }
+    }
+    
+    attemptSubmit()
           setError('Server error: ' + (error.response?.data?.message || 'Internal server error'))
         } else if (error.response?.status === 0) {
           setError('CORS error. Backend may be blocked.')
