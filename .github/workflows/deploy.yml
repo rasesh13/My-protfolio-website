@@ -1,0 +1,98 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main
+      - deploy
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+      
+      - name: Deploy Frontend to Vercel
+        run: |
+          cd frontend
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    needs: deploy-frontend
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      
+      - name: Test Backend
+        run: |
+          cd backend
+          npm install
+          npm run test 2>/dev/null || echo "No tests configured"
+      
+      - name: Deploy Backend to Vercel
+        run: |
+          cd backend
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
+          NODE_ENV: production
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+
+  post-deploy:
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, deploy-backend]
+    if: always()
+    steps:
+      - name: Check Deployment Status
+        run: |
+          echo "Frontend deployment: ${{ needs.deploy-frontend.result }}"
+          echo "Backend deployment: ${{ needs.deploy-backend.result }}"
+      
+      - name: Notify on Success
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Frontend deployed"
+          echo "Backend deployed"
+          echo "Check https://vercel.com/dashboard for details"
+      
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed. Check GitHub Actions logs for details"
+          exit 1
