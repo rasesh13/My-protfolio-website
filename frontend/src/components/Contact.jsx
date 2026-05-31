@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { API_ENDPOINTS } from '../config/api'
 import MagneticButton from './MagneticButton'
@@ -9,10 +8,10 @@ import GlassCard from './GlassCard'
 import AnimatedSection from './AnimatedSection'
 
 export default function Contact() {
-  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,92 +19,75 @@ export default function Contact() {
     message: '',
   })
 
-  // Auto navigate home after message is sent
-  useEffect(() => {
-    if (submitted) {
-      const timer = setTimeout(() => {
-        navigate('/')
-      }, 3000) // Navigate after 3 seconds
-      return () => clearTimeout(timer)
-    }
-  }, [submitted, navigate])
-
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    // Clear errors when user starts typing
+    if (error) setError('')
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('🚀 Form submitted! Starting validation...')
-    console.log('Form data:', formData)
-    
-    // Frontend validation before sending
-    if (!formData.name || formData.name.trim().length < 2) {
-      setError('Name must be at least 2 characters')
-      console.error('❌ Validation failed: Name too short')
-      return
-    }
-    if (!formData.email || !formData.email.includes('@')) {
-      setError('Please enter a valid email address')
-      console.error('❌ Validation failed: Invalid email')
-      return
-    }
-    if (!formData.subject || formData.subject.trim().length < 2) {
-      setError('Subject must be at least 2 characters')
-      console.error('❌ Validation failed: Subject too short')
-      return
-    }
-    if (!formData.message || formData.message.trim().length < 5) {
-      setError('Message must be at least 5 characters')
-      console.error('❌ Validation failed: Message too short')
-      return
-    }
-    
     setError('')
-    setLoading(true)
-    console.log('📤 Sending to:', API_ENDPOINTS.CONTACT)
+    setSuccessMessage('')
     
-    const attemptSubmit = async (attempt = 1) => {
-      try {
-        const response = await axios.post(
-          API_ENDPOINTS.CONTACT,
-          formData,
-          {
-            headers: { 'Content-Type': 'application/json' },
-            timeout: 90000
-          }
-        )
-        
-        console.log('✅ Success:', response.data)
-        setSubmitted(true)
-        setFormData({ name: '', email: '', subject: '', message: '' })
-        setLoading(false)
-      } catch (error) {
-        console.error(`Attempt ${attempt} failed:`, error.message)
-        console.error(`Error code: ${error.code}`)
-        
-        // Check if it's a timeout
-        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-          console.warn('⏱️ Request timeout - Backend might be starting up')
-        }
-        
-        if (attempt < 3) {
-          console.log(`⏳ Retrying in 1 second... (Attempt ${attempt + 1}/3)`)
-          setTimeout(() => attemptSubmit(attempt + 1), 1000)
-        } else {
-          const errorMsg = error.code === 'ECONNABORTED' 
-            ? 'Request took too long. Backend is starting up. Please try again in a moment.'
-            : error.message.includes('Network')
-            ? 'Network error. Please check your connection and try again.'
-            : 'Cannot reach backend. Please check your connection.'
-          setError(errorMsg)
-          setLoading(false)
-        }
-      }
+    // Frontend validation
+    if (!formData.name.trim() || formData.name.trim().length < 2) {
+      setError('Name must be at least 2 characters')
+      return
+    }
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email address')
+      return
+    }
+    if (!formData.subject.trim() || formData.subject.trim().length < 2) {
+      setError('Subject must be at least 2 characters')
+      return
+    }
+    if (!formData.message.trim() || formData.message.trim().length < 5) {
+      setError('Message must be at least 5 characters')
+      return
     }
     
-    attemptSubmit()
+    setLoading(true)
+    console.log('📤 Submitting to:', API_ENDPOINTS.CONTACT)
+    
+    try {
+      const response = await axios.post(
+        API_ENDPOINTS.CONTACT,
+        formData,
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 90000 // 90 seconds for Render cold start
+        }
+      )
+      
+      console.log('✅ Response:', response.data)
+      
+      if (response.data.success) {
+        setSuccessMessage('✅ Message sent successfully! I\'ll get back to you soon.')
+        setFormData({ name: '', email: '', subject: '', message: '' })
+        setSubmitted(true)
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => setSuccessMessage(''), 5000)
+      } else {
+        setError(response.data.message || 'Failed to send message')
+      }
+    } catch (err) {
+      console.error('❌ Error:', err.message)
+      
+      if (err.code === 'ECONNABORTED') {
+        setError('Request timed out. Backend may be waking up. Please try again.')
+      } else if (err.response?.status === 400) {
+        setError(err.response.data?.message || 'Please fill in all fields correctly')
+      } else if (err.message.includes('Network')) {
+        setError('Network error. Please check your connection.')
+      } else {
+        setError('Failed to send message. Please try again.')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   const socialLinks = [
@@ -257,13 +239,13 @@ export default function Contact() {
                 </motion.div>
               )}
 
-              {submitted && (
+              {successMessage && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400"
                 >
-                  ✅ Message sent successfully! I'll get back to you soon.
+                  {successMessage}
                 </motion.div>
               )}
             </form>
