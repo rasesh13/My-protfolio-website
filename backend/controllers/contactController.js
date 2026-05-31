@@ -5,8 +5,11 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
+// Persistent email transporter instance (reuse connection)
+let emailTransporter = null
+
 /**
- * Get email transporter
+ * Get email transporter - reuse or create
  */
 const getEmailTransporter = () => {
   const emailUser = process.env.EMAIL_USER
@@ -15,8 +18,14 @@ const getEmailTransporter = () => {
   if (!emailUser || !emailPassword) {
     throw new Error('Email credentials not configured!')
   }
+
+  // Reuse existing transporter
+  if (emailTransporter) {
+    return emailTransporter
+  }
   
-  return nodemailer.createTransport({
+  // Create new transporter if none exists
+  emailTransporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: emailUser,
@@ -24,7 +33,23 @@ const getEmailTransporter = () => {
     },
     connectionTimeout: 5000,  // 5 seconds
     socketTimeout: 5000,      // 5 seconds
+    pool: {
+      maxConnections: 1,
+      maxMessages: 100,
+    }
   })
+  
+  // Test connection
+  emailTransporter.verify((error) => {
+    if (error) {
+      console.error('❌ Email transporter error:', error.message)
+      emailTransporter = null
+    } else {
+      console.log('✅ Email transporter ready')
+    }
+  })
+  
+  return emailTransporter
 }
 
 /**
@@ -40,7 +65,7 @@ const sendContactEmail = async (data) => {
     console.log('  Admin:', adminEmail)
     
     const transporter = getEmailTransporter()
-    console.log('  ✓ Transporter created')
+    console.log('  ✓ Transporter obtained')
 
     // Prepare admin notification email
     const adminMailOptions = {
@@ -86,11 +111,13 @@ const sendContactEmail = async (data) => {
     console.log('  → Sending admin email to:', adminEmail)
     const adminResult = await transporter.sendMail(adminMailOptions)
     console.log('  ✅ Admin email sent. Message ID:', adminResult.messageId)
+    console.log('     Response:', adminResult.response)
     
     // Send user confirmation
     console.log('  → Sending confirmation email to:', email)
     const userResult = await transporter.sendMail(userMailOptions)
     console.log('  ✅ User confirmation email sent. Message ID:', userResult.messageId)
+    console.log('     Response:', userResult.response)
     
     console.log('📧 BOTH EMAILS SENT SUCCESSFULLY')
     return true
@@ -98,7 +125,15 @@ const sendContactEmail = async (data) => {
     console.error('❌ EMAIL FUNCTION ERROR:')
     console.error('   Message:', error.message)
     console.error('   Code:', error.code)
+    console.error('   Command:', error.command)
     console.error('   Full Error:', error)
+    
+    // Reset transporter on error to force new connection next time
+    if (emailTransporter) {
+      emailTransporter = null
+      console.log('  ♻️ Transporter reset - will create new connection next time')
+    }
+    
     throw error
   }
 }
