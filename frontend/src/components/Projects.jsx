@@ -5,6 +5,7 @@ import Tilt from 'react-parallax-tilt'
 import MagneticButton from './MagneticButton'
 import GlassCard from './GlassCard'
 import AnimatedSection from './AnimatedSection'
+import heroBanner from '/images/hero-banner.png'
 
 export default function Projects() {
   const { ref, inView } = useInView({ threshold: 0.3, triggerOnce: true })
@@ -71,7 +72,7 @@ export default function Projects() {
       description: 'Modern, interactive portfolio showcasing projects and skills. Built with cutting-edge technologies and smooth animations.',
       tech: ['React', 'Tailwind CSS', 'Framer Motion', 'Vite'],
       image: '💼',
-      imageUrl: '/images/hero-banner.png',
+      imageUrl: heroBanner,
       isImageUrl: true,
       liveLink: 'https://demo.com',
       codeLink: 'https://github.com/rasesh13',

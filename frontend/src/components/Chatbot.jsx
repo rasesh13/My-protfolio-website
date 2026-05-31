@@ -21,7 +21,7 @@ const knowledgeBase = {
   },
   contact: {
     keywords: ['contact', 'reach', 'email', 'phone', 'connect', 'linkedin', 'github'],
-    response: "📧 Let's connect!\n• Email: rasesh@example.com\n• LinkedIn: linkedin.com/in/rasesh\n• GitHub: github.com/rasesh\n• Twitter: @rasesh_dev"
+    response: "📧 Let's connect!\n• Email: raseshvarshney82@gmail.com\n• LinkedIn: linkedin.com/in/rasesh\n• GitHub: github.com/rasesh13\n• Twitter: @rasesh_dev"
   },
   default: {
     keywords: [],
@@ -97,15 +97,15 @@ export default function Chatbot() {
     >
       {/* Chat Button - AI Orb */}
       <motion.button
-        whileHover={{ scale: 1.12 }}
-        whileTap={{ scale: 0.92 }}
+        whileHover={{ scale: 1.15 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          width: '70px',
-          height: '70px',
+          bottom: '30px',
+          right: '30px',
+          width: '80px',
+          height: '80px',
           borderRadius: '50%',
           border: 'none',
           background: 'transparent',
@@ -117,49 +117,37 @@ export default function Chatbot() {
           zIndex: 99999,
           padding: 0,
           boxShadow: 'none',
+          transition: 'all 0.3s ease',
         }}
       >
-        {/* Animated backdrop glow on hover */}
-        <motion.div
-          animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 2.5, repeat: Infinity }}
-          style={{
-            position: 'absolute',
-            inset: '-8px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(6, 182, 212, 0.3), transparent)',
-            zIndex: -1,
-          }}
-        />
-        
-        {/* AI Orb Icon */}
+        {/* AI Orb Image - CLEAN, NO GLOW */}
         <img
           src="/images/ai-orb.png"
-          alt="AI Chat"
+          alt="AI Orb"
           style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            borderRadius: '50%',
+            width: '80px',
+            height: '80px',
+            objectFit: 'contain',
             pointerEvents: 'auto',
+            borderRadius: '50%',
           }}
         />
         
-        {/* Notification dot when closed */}
+        {/* Notification dot when closed - MINIMAL */}
         {!isOpen && (
           <motion.div
             animate={{ scale: [1, 1.25, 1], opacity: [1, 0.8, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
             style={{
               position: 'absolute',
-              width: '14px',
-              height: '14px',
-              background: 'linear-gradient(135deg, #ff3b30, #ff6b6b)',
+              width: '10px',
+              height: '10px',
+              background: '#ff3b30',
               borderRadius: '50%',
-              top: '-4px',
-              right: '-4px',
-              boxShadow: '0 0 12px rgba(255, 59, 48, 0.9)',
-              border: '2px solid rgba(15, 23, 42, 0.95)',
+              top: '-2px',
+              right: '-2px',
+              boxShadow: '0 0 8px rgba(255, 59, 48, 0.9)',
+              border: 'none',
             }}
           />
         )}

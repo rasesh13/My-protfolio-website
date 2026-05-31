@@ -1,0 +1,6 @@
+{
+  "name": "Debug Test User",
+  "email": "debugtest@example.com",
+  "subject": "Debug: MongoDB Test Submission",
+  "message": "This is a debug test to check if MongoDB saves data properly"
+}

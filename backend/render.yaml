@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: portfolio-backend
+    env: node
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromDatabase:
+          name: portfolio-db
+          property: connectionString
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: PORT
+        value: "5000"
+
+databases:
+  - name: portfolio-db
+    plan: free
+    region: oregon

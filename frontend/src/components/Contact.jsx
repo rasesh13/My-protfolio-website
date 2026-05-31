@@ -1,12 +1,15 @@
 import { motion } from 'framer-motion'
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { API_ENDPOINTS } from '../config/api'
 import MagneticButton from './MagneticButton'
 import GlassCard from './GlassCard'
 import AnimatedSection from './AnimatedSection'
 
 export default function Contact() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -17,6 +20,16 @@ export default function Contact() {
     message: '',
   })
 
+  // Auto navigate home after message is sent
+  useEffect(() => {
+    if (submitted) {
+      const timer = setTimeout(() => {
+        navigate('/')
+      }, 3000) // Navigate after 3 seconds
+      return () => clearTimeout(timer)
+    }
+  }, [submitted, navigate])
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -24,41 +37,63 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    console.log('🚀 Form submitted! Starting validation...')
+    console.log('Form data:', formData)
+    
+    // Frontend validation before sending
+    if (!formData.name || formData.name.trim().length < 2) {
+      setError('Name must be at least 2 characters')
+      console.error('❌ Validation failed: Name too short')
+      return
+    }
+    if (!formData.email || !formData.email.includes('@')) {
+      setError('Please enter a valid email address')
+      console.error('❌ Validation failed: Invalid email')
+      return
+    }
+    if (!formData.subject || formData.subject.trim().length < 2) {
+      setError('Subject must be at least 2 characters')
+      console.error('❌ Validation failed: Subject too short')
+      return
+    }
+    if (!formData.message || formData.message.trim().length < 5) {
+      setError('Message must be at least 5 characters')
+      console.error('❌ Validation failed: Message too short')
+      return
+    }
+    
     setError('')
     setLoading(true)
-    try {
-      // Use environment variable or construct from current domain
-      let apiUrl = import.meta.env.VITE_API_URL
-      
-      if (!apiUrl) {
-        // Fallback: if not in env, use the Render backend URL directly
-        apiUrl = 'https://my-protfolio-website-uh8o.onrender.com'
-      }
-      
-      console.log('📤 Sending to:', apiUrl)
-      // Increased timeout to 90 seconds to account for Render cold start
-      const response = await axios.post(`${apiUrl}/api/contact`, formData, {
-        timeout: 90000 // 90 seconds for cold start + email processing
-      })
-      if (response.data.success) {
+    console.log('📤 Sending to:', API_ENDPOINTS.CONTACT)
+    
+    const attemptSubmit = async (attempt = 1) => {
+      try {
+        const response = await axios.post(
+          API_ENDPOINTS.CONTACT,
+          formData,
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 20000
+          }
+        )
+        
+        console.log('✅ Success:', response.data)
         setSubmitted(true)
         setFormData({ name: '', email: '', subject: '', message: '' })
-        setTimeout(() => setSubmitted(false), 5000)
+        setLoading(false)
+      } catch (error) {
+        console.error(`Attempt ${attempt} failed:`, error.message)
+        
+        if (attempt < 3) {
+          setTimeout(() => attemptSubmit(attempt + 1), 1000)
+        } else {
+          setError('Cannot reach backend. Please check your connection.')
+          setLoading(false)
+        }
       }
-    } catch (error) {
-      console.error('❌ Error sending message:', error)
-      if (error.response?.status === 400) {
-        setError('Please fill all fields correctly:\n- Name: 2+ characters\n- Email: valid format\n- Subject: 3+ characters\n- Message: 10+ characters')
-      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-        setError('Request took too long. The backend is starting up. Please try again in a moment.')
-      } else if (error.code === 'ERR_NETWORK' || !error.response) {
-        setError('Cannot reach backend. Please check your connection or try again later.')
-      } else {
-        setError('Failed to send message. Please try again.')
-      }
-    } finally {
-      setLoading(false)
     }
+    
+    attemptSubmit()
   }
 
   const socialLinks = [

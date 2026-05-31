@@ -25,7 +25,7 @@ const contactSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Message is required'],
       trim: true,
-      minlength: [10, 'Message must be at least 10 characters'],
+      minlength: [5, 'Message must be at least 5 characters'],
       maxlength: [2000, 'Message must not exceed 2000 characters'],
     },
     phone: {
