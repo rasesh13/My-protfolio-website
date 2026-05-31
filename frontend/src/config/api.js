@@ -2,40 +2,26 @@
 // Detect environment at runtime
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
-// Determine API base URL
-let API_BASE
-if (isDevelopment) {
-  // Development: use localhost
-  API_BASE = 'http://localhost:5000'
-} else {
-  // Production: use environment variable or hardcoded Render URL
-  API_BASE = import.meta.env.VITE_API_URL || 'https://my-protfolio-website-uh8o.onrender.com'
-}
+// Determine API base URL - MUST be Render in production
+const API_BASE = isDevelopment 
+  ? 'http://localhost:5000'
+  : 'https://my-protfolio-website-uh8o.onrender.com'
 
-// Add CORS headers globally
-if (!isDevelopment) {
-  console.log('🌍 Production mode - Using Render backend with CORS')
-}
-
-console.log('🔗 API Base URL:', API_BASE)
-console.log('Frontend Hostname:', window.location.hostname)
-console.log('Frontend Protocol:', window.location.protocol)
-console.log('Environment:', isDevelopment ? 'Development' : 'Production')
+// Log setup
+console.log('🔧 API Configuration:')
+console.log('   Environment:', isDevelopment ? 'Development' : 'Production')
+console.log('   Frontend:', window.location.href)
+console.log('   API Base:', API_BASE)
 
 export const API_ENDPOINTS = {
-  // Contact
   CONTACT: `${API_BASE}/api/contact`,
-  
-  // Chatbot
   CHATBOT: `${API_BASE}/api/chatbot`,
   CHAT: `${API_BASE}/api/chat`,
-  
-  // Projects
   PROJECTS: `${API_BASE}/api/projects`,
-  
-  // Health check
   HEALTH: `${API_BASE}/health`,
 }
+
+console.log('   Contact endpoint:', API_ENDPOINTS.CONTACT)
 
 export const getApiUrl = (endpoint) => {
   return API_ENDPOINTS[endpoint] || `${API_BASE}${endpoint}`
