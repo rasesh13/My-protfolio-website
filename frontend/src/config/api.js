@@ -2,10 +2,15 @@
 // Detect environment at runtime
 const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
-// Use environment variable or fallback to Render backend
-const API_BASE = isDevelopment
-  ? 'http://localhost:5000'
-  : (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_URL_PROD || 'https://my-protfolio-website-uh8o.onrender.com')
+// Determine API base URL
+let API_BASE
+if (isDevelopment) {
+  // Development: use localhost
+  API_BASE = 'http://localhost:5000'
+} else {
+  // Production: use environment variable or hardcoded Render URL
+  API_BASE = import.meta.env.VITE_API_URL || 'https://my-protfolio-website-uh8o.onrender.com'
+}
 
 // Add CORS headers globally
 if (!isDevelopment) {
