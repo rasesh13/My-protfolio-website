@@ -38,7 +38,9 @@ app.use('/api/projects', projectRoutes)
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Not found' }))
 
-// Listen
-app.listen(PORT, () => console.log(`✅ Server on :${PORT}`))
+// Only listen if not on Vercel
+if (process.env.VERCEL !== '1' && !process.env.RAILWAY_ENVIRONMENT_NAME) {
+  app.listen(PORT, () => console.log(`✅ Server on :${PORT}`))
+}
 
 export default app

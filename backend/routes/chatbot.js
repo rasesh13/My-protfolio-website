@@ -8,16 +8,16 @@ import {
 
 const router = express.Router()
 
-// POST /api/chat - Handle chatbot messages
-router.post('/chat', handleChatMessage)
+// POST / - Handle chatbot messages
+router.post('/', handleChatMessage)
 
-// GET /api/chat/history - Get chat history (admin only)
-router.get('/chat/history', getChatHistory)
+// GET /history - Get chat history
+router.get('/history', getChatHistory)
 
-// GET /api/chat/stats - Get chat statistics (admin only)
-router.get('/chat/stats', getChatStats)
+// GET /stats - Get chat statistics
+router.get('/stats', getChatStats)
 
-// PUT /api/chat/:id/feedback - Submit chat feedback
-router.put('/chat/:id/feedback', submitChatFeedback)
+// PUT /:id/feedback - Submit chat feedback
+router.put('/:id/feedback', submitChatFeedback)
 
 export default router
