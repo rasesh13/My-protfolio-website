@@ -30,6 +30,7 @@ connectDB().catch(err => console.error('DB:', err.message))
 
 // Routes
 app.get('/health', (req, res) => res.json({ ok: true }))
+app.get('/warmup', (req, res) => res.json({ ok: true, message: 'Backend warmed up' }))
 app.get('/', (req, res) => res.json({ message: 'API' }))
 app.use('/api/contact', contactRoutes)
 app.use('/api/chat', chatbotRoutes)
