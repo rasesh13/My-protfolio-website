@@ -19,7 +19,8 @@
     "react-parallax-tilt": "^1.7.322",
     "react-router-dom": "^7.14.0",
     "react-scroll": "^1.8.10",
-    "three": "^0.160.0"
+    "three": "^0.160.0",
+    "three-mesh-bvh": "^0.8.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
