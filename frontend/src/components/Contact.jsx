@@ -75,8 +75,8 @@ export default function Contact() {
         setSuccessMessage('✅ Message sent successfully! I\'ll get back to you soon.')
         setFormData({ name: '', email: '', subject: '', message: '' })
         setSubmitted(true)
-        // Auto-hide success message after 5 seconds
-        setTimeout(() => setSuccessMessage(''), 5000)
+        // Keep success message visible for 10 seconds
+        setTimeout(() => setSuccessMessage(''), 10000)
       } else {
         setError(response.data.message || 'Failed to send message')
       }
@@ -256,7 +256,11 @@ export default function Contact() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400"
+                  className="p-5 bg-green-500/20 border-2 border-green-500 rounded-lg text-green-300 font-semibold text-center text-lg"
+                  style={{
+                    background: 'rgba(34, 197, 94, 0.15)',
+                    backdropFilter: 'blur(10px)',
+                  }}
                 >
                   {successMessage}
                 </motion.div>
