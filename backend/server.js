@@ -47,7 +47,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`)
+  console.log(`📨 ${req.method} ${req.path} - Headers:`, {
+    'content-type': req.headers['content-type'],
+    origin: req.headers.origin,
+    'user-agent': req.headers['user-agent']?.slice(0, 50)
+  })
   next()
 })
 
@@ -63,6 +67,11 @@ app.get('/health', (req, res) => {
     timestamp: new Date(),
     environment: process.env.NODE_ENV || 'development'
   })
+})
+
+// Test endpoint
+app.post('/api/contact/test', (req, res) => {
+  res.json({ message: 'Contact route is working!' })
 })
 
 // Warmup endpoint - keeps serverless warm, initializes DB connection

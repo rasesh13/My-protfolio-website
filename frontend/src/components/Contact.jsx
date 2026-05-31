@@ -50,21 +50,27 @@ export default function Contact() {
     }
     
     setLoading(true)
-    console.log('📤 Submitting to:', API_ENDPOINTS.CONTACT)
+    const endpoint = API_ENDPOINTS.CONTACT
+    console.log('📤 Submitting contact form')
+    console.log('   Endpoint:', endpoint)
+    console.log('   Data:', formData)
     
     try {
+      console.log('🔄 Sending POST request...')
       const response = await axios.post(
-        API_ENDPOINTS.CONTACT,
+        endpoint,
         formData,
         {
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json'
+          },
           timeout: 90000 // 90 seconds for Render cold start
         }
       )
       
-      console.log('✅ Response:', response.data)
+      console.log('✅ Response received:', response.status, response.data)
       
-      if (response.data.success) {
+      if (response.data.success || response.status === 201) {
         setSuccessMessage('✅ Message sent successfully! I\'ll get back to you soon.')
         setFormData({ name: '', email: '', subject: '', message: '' })
         setSubmitted(true)
@@ -74,12 +80,18 @@ export default function Contact() {
         setError(response.data.message || 'Failed to send message')
       }
     } catch (err) {
-      console.error('❌ Error:', err.message)
+      console.error('❌ Full error object:', err)
+      console.error('   Message:', err.message)
+      console.error('   Code:', err.code)
+      console.error('   Response status:', err.response?.status)
+      console.error('   Response data:', err.response?.data)
       
       if (err.code === 'ECONNABORTED') {
         setError('Request timed out. Backend may be waking up. Please try again.')
       } else if (err.response?.status === 400) {
         setError(err.response.data?.message || 'Please fill in all fields correctly')
+      } else if (err.response?.status === 404) {
+        setError('Contact endpoint not found. Backend may be misconfigured.')
       } else if (err.message.includes('Network')) {
         setError('Network error. Please check your connection.')
       } else {
