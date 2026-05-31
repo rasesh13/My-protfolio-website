@@ -56,7 +56,8 @@ export default function Contact() {
     console.log('   Data:', formData)
     
     try {
-      console.log('🔄 Sending POST request...')
+      console.log('🔄 Sending POST request to:', endpoint)
+      console.log('⏱️ Timeout: 90 seconds')
       const response = await axios.post(
         endpoint,
         formData,
@@ -64,7 +65,7 @@ export default function Contact() {
           headers: { 
             'Content-Type': 'application/json'
           },
-          timeout: 90000 // 90 seconds for Render cold start
+          timeout: 90000 // 90 SECONDS - NOT 20!
         }
       )
       
