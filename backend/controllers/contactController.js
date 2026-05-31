@@ -21,7 +21,9 @@ const getEmailTransporter = () => {
     auth: {
       user: emailUser,
       pass: emailPassword,
-    }
+    },
+    connectionTimeout: 5000,  // 5 seconds
+    socketTimeout: 5000,      // 5 seconds
   })
 }
 
@@ -167,7 +169,7 @@ export const submitContact = async (req, res) => {
           }
         })(),
         
-        // OPERATION 2: Send emails with retry logic
+        // OPERATION 2: Send emails with retry logic AND TIMEOUT
         (async () => {
           let emailRetries = 0
           const maxEmailRetries = 3
@@ -179,7 +181,13 @@ export const submitContact = async (req, res) => {
               console.log('   - EMAIL_USER:', process.env.EMAIL_USER ? '✓ SET' : '✗ MISSING')
               console.log('   - EMAIL_PASSWORD:', process.env.EMAIL_PASSWORD ? '✓ SET' : '✗ MISSING')
               
-              await sendContactEmail({ name, email, message, subject })
+              // WRAP IN TIMEOUT - max 8 seconds per attempt
+              const emailPromise = sendContactEmail({ name, email, message, subject })
+              const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Email timeout')), 8000)
+              )
+              
+              await Promise.race([emailPromise, timeoutPromise])
               console.log('✅ Emails sent successfully!')
               return true
             } catch (emailError) {
@@ -190,7 +198,7 @@ export const submitContact = async (req, res) => {
               
               // Retry on temporary errors
               if (emailRetries < maxEmailRetries) {
-                const waitTime = (emailError.code === 'ENOTFOUND' || emailError.code === 'ETIMEDOUT') 
+                const waitTime = (emailError.code === 'ENOTFOUND' || emailError.code === 'ETIMEDOUT' || emailError.message === 'Email timeout') 
                   ? 1000 * emailRetries 
                   : 2000 * emailRetries
                 console.log(`⏳ Retrying in ${waitTime}ms... (${emailRetries}/${maxEmailRetries})`)
@@ -198,7 +206,8 @@ export const submitContact = async (req, res) => {
                 return sendEmailWithRetry()
               } else {
                 console.error('⚠️ EMAILS FAILED AFTER ALL RETRIES')
-                throw emailError
+                // Don't throw - continue without emails
+                return false
               }
             }
           }
