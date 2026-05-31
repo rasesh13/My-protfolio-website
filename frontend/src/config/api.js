@@ -5,7 +5,7 @@ const isDevelopment = window.location.hostname === 'localhost' || window.locatio
 // Use environment variable or fallback to Render backend
 const API_BASE = isDevelopment
   ? 'http://localhost:5000'
-  : (import.meta.env.VITE_API_URL_PROD || 'https://my-protfolio-website-uh8o.onrender.com')
+  : (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_URL_PROD || 'https://my-protfolio-website-uh8o.onrender.com')
 
 // Add CORS headers globally
 if (!isDevelopment) {

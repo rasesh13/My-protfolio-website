@@ -73,7 +73,7 @@ export default function Contact() {
           formData,
           {
             headers: { 'Content-Type': 'application/json' },
-            timeout: 20000
+            timeout: 90000
           }
         )
         
@@ -83,11 +83,23 @@ export default function Contact() {
         setLoading(false)
       } catch (error) {
         console.error(`Attempt ${attempt} failed:`, error.message)
+        console.error(`Error code: ${error.code}`)
+        
+        // Check if it's a timeout
+        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+          console.warn('⏱️ Request timeout - Backend might be starting up')
+        }
         
         if (attempt < 3) {
+          console.log(`⏳ Retrying in 1 second... (Attempt ${attempt + 1}/3)`)
           setTimeout(() => attemptSubmit(attempt + 1), 1000)
         } else {
-          setError('Cannot reach backend. Please check your connection.')
+          const errorMsg = error.code === 'ECONNABORTED' 
+            ? 'Request took too long. Backend is starting up. Please try again in a moment.'
+            : error.message.includes('Network')
+            ? 'Network error. Please check your connection and try again.'
+            : 'Cannot reach backend. Please check your connection.'
+          setError(errorMsg)
           setLoading(false)
         }
       }
